@@ -9,7 +9,13 @@ namespace internLoanProject.Domain.Entities
 {
     public class PaymentPlan: BaseEntity
     {
+        public Guid LoanCalculationId { get; set; }
+
+        public LoanCalculation LoanCalculation { get; set; }
+
         public int InstallmentNumber { get; set; }
+
+        public DateTime DueDate { get; set; }
 
         public decimal InstallmentAmount { get; set; }
 
@@ -18,7 +24,5 @@ namespace internLoanProject.Domain.Entities
         public decimal InterestAmount { get; set; }
 
         public decimal RemainingPrincipal { get; set; }
-        public Guid LoanCalculationId { get; set; }
-        public LoanCalculation LoanCalculation { get; set; }
     }
 }

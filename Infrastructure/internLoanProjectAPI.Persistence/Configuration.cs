@@ -15,7 +15,7 @@ namespace internLoanProjectAPI.Persistence
             {
 
                 ConfigurationManager configurationManager = new();
-                configurationManager.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../..internLoanProjectAPI-API"));
+                configurationManager.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../../Presentation/internLoanProjectAPI.API"));
                 configurationManager.AddJsonFile("appsettings.json");
                 return configurationManager.GetConnectionString("SqlConnection");
             }
