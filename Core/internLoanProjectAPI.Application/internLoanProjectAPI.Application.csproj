@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\Calculation\" />
     <Folder Include="Repositories\CustomerType\" />
     <Folder Include="Repositories\LoanApplication\" />
     <Folder Include="Repositories\LoanCalculation\" />

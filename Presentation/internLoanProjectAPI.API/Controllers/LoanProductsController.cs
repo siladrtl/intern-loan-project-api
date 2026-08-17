@@ -49,7 +49,7 @@ namespace internLoanProjectAPI.API.Controllers
             if (!result)
                 return BadRequest();
 
-            return Ok("Loan product created successfully.");
+            return Ok("Kredi ürünü başarılı şekilde oluşturuldu.");
         }
 
         [HttpPut("{id}")]
@@ -61,7 +61,7 @@ namespace internLoanProjectAPI.API.Controllers
             if (!result)
                 return NotFound();
 
-            return Ok("Loan product updated successfully.");
+            return Ok("Kredi ürünü başarılı şekilde güncellendi.");
         }
 
 
@@ -74,7 +74,7 @@ namespace internLoanProjectAPI.API.Controllers
             if (!result)
                 return NotFound();
 
-            return Ok("Loan product deleted successfully.");
+            return Ok("Kredi ürünü başarılı şekilde silindi.");
         }
 
     }
