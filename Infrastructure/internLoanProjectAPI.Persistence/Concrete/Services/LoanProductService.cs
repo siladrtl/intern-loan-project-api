@@ -75,8 +75,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 })
                 .ToListAsync();
         }
-
-
         // ADMIN - ADD
         public async Task<bool> AddAsync(
             CreateLoanProductRequestDto x)
