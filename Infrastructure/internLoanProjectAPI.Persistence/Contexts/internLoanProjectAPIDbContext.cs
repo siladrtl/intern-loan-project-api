@@ -28,7 +28,7 @@ namespace internLoanProjectAPI.Persistence.Contexts
             base.OnModelCreating(builder);
 
 
-            // BANK
+            // BANK: SEED DATA ile eklendi
 
             builder.Entity<Bank>()
                 .HasIndex(x => x.Name)
@@ -50,7 +50,8 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
                 Name = "İş Bankası"
             }
-);
+
+            );
             // LOAN TYPE
 
             builder.Entity<LoanType>()
@@ -202,6 +203,147 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .WithOne(x => x.LoanApplication)
                 .HasForeignKey<LoanApplication>(x => x.LoanCalculationId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+             // =========================
+            // LOAN TYPE
+            // =========================
+
+            var loanType1Id =
+                Guid.Parse("44444444-4444-4444-4444-444444444444");
+
+            var loanType2Id =
+                Guid.Parse("55555555-5555-5555-5555-555555555555");
+
+            builder.Entity<LoanType>().HasData(
+                new LoanType
+                {
+                    Id = loanType1Id,
+                    Name = "Taksitli Kredi"
+                },
+                new LoanType
+                {
+                    Id = loanType2Id,
+                    Name = "Taksitli Ek Hesap"
+                }
+            );
+
+
+            // =========================
+            // CUSTOMER TYPE
+            // =========================
+
+            var customerType1Id =
+                Guid.Parse("66666666-6666-6666-6666-666666666666");
+
+            var customerType2Id =
+                Guid.Parse("77777777-7777-7777-7777-777777777777");
+
+            builder.Entity<CustomerType>().HasData(
+                new CustomerType
+                {
+                    Id = customerType1Id,
+                    Name = "Öğrenci"
+                },
+                new CustomerType
+                {
+                    Id = customerType2Id,
+                    Name = "Esnaf"
+                }
+            );
+
+
+            // =========================
+            // LOAN PRODUCT
+            // =========================
+
+            builder.Entity<LoanProduct>().HasData(
+
+                new LoanProduct
+                {
+                    Id = Guid.Parse(
+                        "88888888-8888-8888-8888-888888888888"),
+
+                    Name = "Taksitli Ek Hesap Öğrenci",
+
+                    InterestRate = 3.25m,
+
+                    MinAmount = 1000m,
+                    MaxAmount = 50000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 24,
+
+                    IsActive = true,
+
+                    // Akbank
+                    BankId = Guid.Parse(
+                        "11111111-1111-1111-1111-111111111111"),
+
+                    // Taksitli Ek Hesap
+                    LoanTypeId = loanType2Id,
+
+                    // Öğrenci
+                    CustomerTypeId = customerType1Id
+                },
+
+                new LoanProduct
+                {
+                    Id = Guid.Parse(
+                        "99999999-9999-9999-9999-999999999999"),
+
+                    Name = "Taksitli Kredi Esnaf",
+
+                    InterestRate = 2.95m,
+
+                    MinAmount = 5000m,
+                    MaxAmount = 250000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 12,
+
+                    IsActive = true,
+
+                    // Garanti BBVA
+                    BankId = Guid.Parse(
+                        "22222222-2222-2222-2222-222222222222"),
+
+                    // Taksitli Kredi
+                    LoanTypeId = loanType1Id,
+
+                    // Esnaf
+                    CustomerTypeId = customerType2Id
+                },
+
+                new LoanProduct
+                {
+                    Id = Guid.Parse(
+                        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+
+                    Name = "Taksitli Kredi Öğrenci",
+
+                    InterestRate = 3.10m,
+
+                    MinAmount = 2000m,
+                    MaxAmount = 75000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 24,
+
+                    IsActive = true,
+
+                    // İş Bankası
+                    BankId = Guid.Parse(
+                        "33333333-3333-3333-3333-333333333333"),
+
+                    // Taksitli Kredi
+                    LoanTypeId = loanType1Id,
+
+                    // Öğrenci
+                    CustomerTypeId = customerType1Id
+                }
+            );
+
+           
         }
     }
 
