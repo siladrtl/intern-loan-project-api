@@ -20,11 +20,19 @@ namespace internLoanProjectAPI.Persistence
         public static void AddPersistenceServices(this IServiceCollection services)
         {
             services.AddDbContext<internLoanProjectAPIDbContext>(options => options.UseSqlServer(Configuration.ConnectionString));
+            
+            //Unit Of Work DI Kaydi
+
             services.AddScoped<IUnitOfWork, UnitOfWork>();
        
-            services.AddScoped<IBankService, BankService>();
-
            
+            //Servis DI Kaydi
+
+            services.AddScoped<IBankService, BankService>();
+            services.AddScoped<ILoanTypeService, LoanTypeService>();
+            services.AddScoped<ILoanProductService, LoanProductService>();
+            services.AddScoped<ILoanCalculationService, LoanCalculationService>();
+            
         }
     }
 }

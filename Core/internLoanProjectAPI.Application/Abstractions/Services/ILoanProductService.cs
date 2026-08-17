@@ -1,0 +1,25 @@
+﻿using internLoanProjectAPI.Application.DTOs.Product;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace internLoanProjectAPI.Application.Abstractions.Services
+{
+    public interface ILoanProductService
+    {
+        // Kullanıcı,Admin
+        Task<List<LoanProductDto>> GetAllAsync();
+
+        Task<List<LoanProductDto>> GetByLoanTypeAsync(Guid loanTypeId, Guid customerTypeId);
+
+        // Admin
+        Task<bool> AddAsync(CreateLoanProductRequestDto dto);
+
+
+        Task<bool> UpdateAsync(Guid id, UpdateLoanProductRequestDto dto);
+
+        Task<bool> DeleteAsync(Guid id);
+    }
+}
