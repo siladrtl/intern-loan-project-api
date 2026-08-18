@@ -38,7 +38,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     dto.Amount > loanProduct.MaxAmount)
                 {
                     throw new Exception(
-                        "Loan amount is outside the allowed range.");
+                        "Kredi tutarı verilen aralığın dışında.");
                 }
 
                 // Vade kontrolü
@@ -46,7 +46,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     dto.Term > loanProduct.MaxTerm)
                 {
                     throw new Exception(
-                        "Loan term is outside the allowed range.");
+                        "Kredi vadesi verilen aralığın dışında. Farklı bir kredi tutarı giriniz.");
                 }
 
                 decimal monthlyInterestRate =

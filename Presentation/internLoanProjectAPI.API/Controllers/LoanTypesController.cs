@@ -18,8 +18,7 @@ namespace internLoanProjectAPI.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var result =
-                await _loanTypeService.GetAllAsync();
+            var result = await _loanTypeService.GetAllAsync();
 
             return Ok(result);
         }
