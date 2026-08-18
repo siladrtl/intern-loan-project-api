@@ -20,8 +20,7 @@ namespace internLoanProjectAPI.API.Controllers
         public async Task<IActionResult> Calculate(
         CreateLoanCalculationDto dto)
         {
-            var result =
-                await _loanCalculationService
+            var result = await _loanCalculationService
                     .CalculateAsync(dto);
 
             return Ok(result);

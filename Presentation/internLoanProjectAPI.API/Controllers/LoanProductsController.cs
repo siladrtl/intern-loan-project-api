@@ -29,8 +29,7 @@ namespace internLoanProjectAPI.API.Controllers
         [HttpGet("by-loan-type")]
         public async Task<IActionResult> GetByLoanType(Guid loanTypeId, Guid customerTypeId)
         {
-            var result =
-                await _loanProductService
+            var result = await _loanProductService
                     .GetByLoanTypeAsync(
                         loanTypeId,
                         customerTypeId);
