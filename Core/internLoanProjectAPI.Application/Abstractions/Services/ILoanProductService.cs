@@ -14,6 +14,7 @@ namespace internLoanProjectAPI.Application.Abstractions.Services
 
         Task<List<LoanProductDto>> GetByLoanTypeAsync(Guid loanTypeId, Guid customerTypeId);
 
+        Task<List<ProductSearchResultDto>> SearchAsync(ProductSearchRequestDto request);
         // Admin
         Task<bool> AddAsync(CreateLoanProductRequestDto dto);
 
@@ -23,3 +24,5 @@ namespace internLoanProjectAPI.Application.Abstractions.Services
         Task<bool> DeleteAsync(Guid id);
     }
 }
+
+

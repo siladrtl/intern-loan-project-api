@@ -1,4 +1,6 @@
 ﻿using internLoanProject.Domain.Entities;
+using internLoanProject.Domain.Entities.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -9,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace internLoanProjectAPI.Persistence.Contexts
 {
-    public class internLoanProjectAPIDbContext : DbContext
+    public class internLoanProjectAPIDbContext : IdentityDbContext<AppUser, AppRole, Guid>
     {
         public internLoanProjectAPIDbContext(DbContextOptions options) : base(options)
         {
@@ -27,6 +29,13 @@ namespace internLoanProjectAPI.Persistence.Contexts
         {
             base.OnModelCreating(builder);
 
+
+
+            builder.Entity<AppUser>()
+                .HasOne(x => x.Customer)
+                .WithMany()
+                .HasForeignKey(x => x.CustomerId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // BANK: SEED DATA ile eklendi
 

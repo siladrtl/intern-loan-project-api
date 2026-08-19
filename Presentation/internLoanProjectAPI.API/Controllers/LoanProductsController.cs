@@ -75,7 +75,12 @@ namespace internLoanProjectAPI.API.Controllers
 
             return Ok("Kredi ürünü başarılı şekilde silindi.");
         }
-
+        [HttpPost("Search")]
+        public async Task<IActionResult> Search(ProductSearchRequestDto dto)
+        {
+            var result = await _loanProductService.SearchAsync(dto);
+            return Ok(result);
+        }
     }
 }
 
