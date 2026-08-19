@@ -175,6 +175,70 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
             return true;
         }
+        public async Task<List<ProductSearchResultDto>> SearchAsync(ProductSearchRequestDto request)
+        {
+            var query = _unitOfWork
+                .GetReadRepository<LoanProduct>()
+                .GetWhere(
+                    x =>
+                        x.IsActive &&
+                        x.LoanTypeId == request.LoanTypeId &&
+                        x.CustomerTypeId == request.CustomerTypeId &&
+                        x.MinAmount <= request.Amount &&
+                        x.MaxAmount >= request.Amount &&
+                        x.MinTerm <= request.Term &&
+                        x.MaxTerm >= request.Term,
+                    false);
+
+            if (request.BankIds != null && request.BankIds.Count > 0)
+            {
+                query = query.Where(x => request.BankIds.Contains(x.BankId));
+            }
+
+            var products = await query
+                .Include(x => x.Bank)
+                .Include(x => x.LoanType)
+                .ToListAsync();
+
+            var results = new List<ProductSearchResultDto>();
+
+            foreach (var product in products)
+            {
+                decimal monthlyInterestRate = product.InterestRate / 100;
+                decimal monthlyInstallment;
+
+                if (monthlyInterestRate == 0)
+                {
+                    monthlyInstallment = request.Amount / request.Term;
+                }
+                else
+                {
+                    monthlyInstallment =
+                        request.Amount *
+                        monthlyInterestRate *
+                        (decimal)Math.Pow((double)(1 + monthlyInterestRate), request.Term)
+                        /
+                        ((decimal)Math.Pow((double)(1 + monthlyInterestRate), request.Term) - 1);
+                }
+
+                monthlyInstallment = Math.Round(monthlyInstallment, 2);
+                decimal totalPayment = Math.Round(monthlyInstallment * request.Term, 2);
+
+                results.Add(new ProductSearchResultDto
+                {
+                    LoanProductId = product.Id,
+                    BankName = product.Bank.Name,
+                    LoanTypeName = product.LoanType.Name,
+                    Amount = request.Amount,
+                    Term = request.Term,
+                    InterestRate = product.InterestRate,
+                    MonthlyInstallment = monthlyInstallment,
+                    TotalPayment = totalPayment
+                });
+            }
+
+            return results;
+        }
 
     }
 }
