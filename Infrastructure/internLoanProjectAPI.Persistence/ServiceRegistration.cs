@@ -34,6 +34,7 @@ namespace internLoanProjectAPI.Persistence
             services.AddScoped<ILoanCalculationService, LoanCalculationService>();
             services.AddScoped<ICustomerTypeService, CustomerTypeService>();    
             services.AddScoped<IAuthService, AuthService>();    
+            services.AddScoped<ILoanApplicationService, LoanApplicationService>();
             
         }
     }
