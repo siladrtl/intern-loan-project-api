@@ -8,9 +8,9 @@ namespace internLoanProjectAPI.Application.DTOs.Calculation
 {
     public class LoanCalculationDto
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
-        public Guid LoanProductId { get; set; }
+        public int LoanProductId { get; set; }
 
         public string LoanProductName { get; set; }
 
@@ -23,6 +23,10 @@ namespace internLoanProjectAPI.Application.DTOs.Calculation
         public decimal MonthlyInstallment { get; set; }
 
         public decimal TotalInterest { get; set; }
+
+        public decimal TotalKkdf { get; set; }
+
+        public decimal TotalBsmv { get; set; }
 
         public decimal TotalPayment { get; set; }
 

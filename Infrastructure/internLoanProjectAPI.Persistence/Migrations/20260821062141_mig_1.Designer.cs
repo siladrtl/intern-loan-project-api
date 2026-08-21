@@ -12,8 +12,8 @@ using internLoanProjectAPI.Persistence.Contexts;
 namespace internLoanProjectAPI.Persistence.Migrations
 {
     [DbContext(typeof(internLoanProjectAPIDbContext))]
-    [Migration("20260819133107_mig_2")]
-    partial class mig_2
+    [Migration("20260821062141_mig_1")]
+    partial class mig_1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -130,19 +130,15 @@ namespace internLoanProjectAPI.Persistence.Migrations
 
             modelBuilder.Entity("internLoanProject.Domain.Entities.Bank", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -154,32 +150,63 @@ namespace internLoanProjectAPI.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Akbank",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                            Id = 1,
+                            Name = "Ziraat Bankası"
                         },
                         new
                         {
-                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Garanti BBVA",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                            Id = 2,
+                            Name = "Halkbank"
                         },
                         new
                         {
-                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "İş Bankası",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                            Id = 3,
+                            Name = "VakıfBank"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "İş Bankası"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Garanti BBVA"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "Yapı Kredi"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Name = "Akbank"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Name = "QNB"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Name = "DenizBank"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Name = "TEB"
                         });
                 });
 
             modelBuilder.Entity("internLoanProject.Domain.Entities.Customer", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("datetime2");
@@ -188,11 +215,8 @@ namespace internLoanProjectAPI.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("CustomerTypeId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("CustomerType")
+                        .HasColumnType("int");
 
                     b.Property<string>("District")
                         .IsRequired()
@@ -200,7 +224,7 @@ namespace internLoanProjectAPI.Persistence.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -212,60 +236,21 @@ namespace internLoanProjectAPI.Persistence.Migrations
 
                     b.Property<string>("NationalId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomerTypeId");
-
-                    b.ToTable("Customers");
-                });
-
-            modelBuilder.Entity("internLoanProject.Domain.Entities.CustomerType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
+                    b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("CustomerTypes");
+                    b.HasIndex("NationalId")
+                        .IsUnique();
 
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("66666666-6666-6666-6666-666666666666"),
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Öğrenci",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = new Guid("77777777-7777-7777-7777-777777777777"),
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Esnaf",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        });
+                    b.ToTable("Customers");
                 });
 
             modelBuilder.Entity("internLoanProject.Domain.Entities.Identity.AppRole", b =>
@@ -309,8 +294,8 @@ namespace internLoanProjectAPI.Persistence.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("CustomerId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -354,7 +339,9 @@ namespace internLoanProjectAPI.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomerId");
+                    b.HasIndex("CustomerId")
+                        .IsUnique()
+                        .HasFilter("[CustomerId] IS NOT NULL");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -369,28 +356,24 @@ namespace internLoanProjectAPI.Persistence.Migrations
 
             modelBuilder.Entity("internLoanProject.Domain.Entities.LoanApplication", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("LoanCalculationId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("LoanCalculationId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("LoanProductId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("LoanProductId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -406,23 +389,22 @@ namespace internLoanProjectAPI.Persistence.Migrations
 
             modelBuilder.Entity("internLoanProject.Domain.Entities.LoanCalculation", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<decimal>("InterestRate")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<Guid>("LoanProductId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("LoanProductId")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("MonthlyInstallment")
                         .HasPrecision(18, 2)
@@ -431,16 +413,21 @@ namespace internLoanProjectAPI.Persistence.Migrations
                     b.Property<int>("Term")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("TotalBsmv")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("TotalInterest")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalKkdf")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("TotalPayment")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -451,18 +438,17 @@ namespace internLoanProjectAPI.Persistence.Migrations
 
             modelBuilder.Entity("internLoanProject.Domain.Entities.LoanProduct", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("BankId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("BankId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("CustomerTypeId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("CustomerType")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("InterestRate")
                         .HasPrecision(18, 2)
@@ -471,8 +457,8 @@ namespace internLoanProjectAPI.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("LoanTypeId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("LoanTypeId")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("MaxAmount")
                         .HasPrecision(18, 2)
@@ -492,14 +478,9 @@ namespace internLoanProjectAPI.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("Id");
 
                     b.HasIndex("BankId");
-
-                    b.HasIndex("CustomerTypeId");
 
                     b.HasIndex("LoanTypeId");
 
@@ -508,69 +489,207 @@ namespace internLoanProjectAPI.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("88888888-8888-8888-8888-888888888888"),
-                            BankId = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CustomerTypeId = new Guid("66666666-6666-6666-6666-666666666666"),
+                            Id = 1,
+                            BankId = 1,
+                            CustomerType = 1,
                             InterestRate = 3.25m,
                             IsActive = true,
-                            LoanTypeId = new Guid("55555555-5555-5555-5555-555555555555"),
-                            MaxAmount = 50000m,
+                            LoanTypeId = 1,
+                            MaxAmount = 100000m,
                             MaxTerm = 24,
-                            MinAmount = 1000m,
-                            MinTerm = 3,
-                            Name = "Taksitli Ek Hesap Öğrenci",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = new Guid("99999999-9999-9999-9999-999999999999"),
-                            BankId = new Guid("22222222-2222-2222-2222-222222222222"),
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CustomerTypeId = new Guid("77777777-7777-7777-7777-777777777777"),
-                            InterestRate = 2.95m,
-                            IsActive = true,
-                            LoanTypeId = new Guid("44444444-4444-4444-4444-444444444444"),
-                            MaxAmount = 250000m,
-                            MaxTerm = 12,
                             MinAmount = 5000m,
                             MinTerm = 3,
-                            Name = "Taksitli Kredi Esnaf",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                            Name = "Öğrenci İhtiyaç Kredisi"
                         },
                         new
                         {
-                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
-                            BankId = new Guid("33333333-3333-3333-3333-333333333333"),
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CustomerTypeId = new Guid("66666666-6666-6666-6666-666666666666"),
+                            Id = 2,
+                            BankId = 4,
+                            CustomerType = 1,
                             InterestRate = 3.10m,
                             IsActive = true,
-                            LoanTypeId = new Guid("44444444-4444-4444-4444-444444444444"),
-                            MaxAmount = 75000m,
+                            LoanTypeId = 2,
+                            MaxAmount = 150000m,
                             MaxTerm = 24,
                             MinAmount = 2000m,
                             MinTerm = 3,
-                            Name = "Taksitli Kredi Öğrenci",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                            Name = "Eğitim Destek Kredisi"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            BankId = 7,
+                            CustomerType = 1,
+                            InterestRate = 3.20m,
+                            IsActive = true,
+                            LoanTypeId = 2,
+                            MaxAmount = 100000m,
+                            MaxTerm = 18,
+                            MinAmount = 5000m,
+                            MinTerm = 3,
+                            Name = "Öğrenci Eğitim Finansmanı"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            BankId = 10,
+                            CustomerType = 1,
+                            InterestRate = 3.35m,
+                            IsActive = true,
+                            LoanTypeId = 1,
+                            MaxAmount = 75000m,
+                            MaxTerm = 18,
+                            MinAmount = 5000m,
+                            MinTerm = 3,
+                            Name = "Genç İhtiyaç Kredisi"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            BankId = 2,
+                            CustomerType = 2,
+                            InterestRate = 2.85m,
+                            IsActive = true,
+                            LoanTypeId = 3,
+                            MaxAmount = 750000m,
+                            MaxTerm = 36,
+                            MinAmount = 25000m,
+                            MinTerm = 3,
+                            Name = "Esnaf Destek Kredisi"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            BankId = 3,
+                            CustomerType = 2,
+                            InterestRate = 2.95m,
+                            IsActive = true,
+                            LoanTypeId = 3,
+                            MaxAmount = 500000m,
+                            MaxTerm = 36,
+                            MinAmount = 20000m,
+                            MinTerm = 3,
+                            Name = "Esnaf İşletme Kredisi"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            BankId = 8,
+                            CustomerType = 2,
+                            InterestRate = 3.05m,
+                            IsActive = true,
+                            LoanTypeId = 3,
+                            MaxAmount = 400000m,
+                            MaxTerm = 24,
+                            MinAmount = 25000m,
+                            MinTerm = 3,
+                            Name = "Esnaf Nakit Destek"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            BankId = 5,
+                            CustomerType = 2,
+                            InterestRate = 3.40m,
+                            IsActive = true,
+                            LoanTypeId = 1,
+                            MaxAmount = 250000m,
+                            MaxTerm = 24,
+                            MinAmount = 10000m,
+                            MinTerm = 3,
+                            Name = "Esnaf İhtiyaç Kredisi"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            BankId = 6,
+                            CustomerType = 2,
+                            InterestRate = 3.00m,
+                            IsActive = true,
+                            LoanTypeId = 3,
+                            MaxAmount = 600000m,
+                            MaxTerm = 36,
+                            MinAmount = 25000m,
+                            MinTerm = 3,
+                            Name = "KOBİ Esnaf Destek"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            BankId = 1,
+                            CustomerType = 3,
+                            InterestRate = 2.95m,
+                            IsActive = true,
+                            LoanTypeId = 4,
+                            MaxAmount = 250000m,
+                            MaxTerm = 24,
+                            MinAmount = 5000m,
+                            MinTerm = 3,
+                            Name = "Emekli İhtiyaç Kredisi"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            BankId = 4,
+                            CustomerType = 3,
+                            InterestRate = 3.00m,
+                            IsActive = true,
+                            LoanTypeId = 4,
+                            MaxAmount = 200000m,
+                            MaxTerm = 24,
+                            MinAmount = 5000m,
+                            MinTerm = 3,
+                            Name = "Emekliye Özel Kredi"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            BankId = 3,
+                            CustomerType = 3,
+                            InterestRate = 2.90m,
+                            IsActive = true,
+                            LoanTypeId = 4,
+                            MaxAmount = 250000m,
+                            MaxTerm = 24,
+                            MinAmount = 5000m,
+                            MinTerm = 3,
+                            Name = "Emekli Destek Kredisi"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            BankId = 9,
+                            CustomerType = 3,
+                            InterestRate = 3.25m,
+                            IsActive = true,
+                            LoanTypeId = 1,
+                            MaxAmount = 150000m,
+                            MaxTerm = 18,
+                            MinAmount = 5000m,
+                            MinTerm = 3,
+                            Name = "Emekli İhtiyaç Finansmanı"
                         });
                 });
 
             modelBuilder.Entity("internLoanProject.Domain.Entities.LoanType", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BsmvRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("KkdfRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -582,28 +701,45 @@ namespace internLoanProjectAPI.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("44444444-4444-4444-4444-444444444444"),
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Taksitli Kredi",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                            Id = 1,
+                            BsmvRate = 15m,
+                            KkdfRate = 15m,
+                            Name = "İhtiyaç Kredisi"
                         },
                         new
                         {
-                            Id = new Guid("55555555-5555-5555-5555-555555555555"),
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Taksitli Ek Hesap",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                            Id = 2,
+                            BsmvRate = 15m,
+                            KkdfRate = 15m,
+                            Name = "Eğitim Kredisi"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            BsmvRate = 5m,
+                            KkdfRate = 0m,
+                            Name = "Esnaf Kredisi"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            BsmvRate = 15m,
+                            KkdfRate = 15m,
+                            Name = "Emekli Kredisi"
                         });
                 });
 
             modelBuilder.Entity("internLoanProject.Domain.Entities.PaymentPlan", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BsmvAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");
@@ -619,8 +755,12 @@ namespace internLoanProjectAPI.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<Guid>("LoanCalculationId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<decimal>("KkdfAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("LoanCalculationId")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("PrincipalAmount")
                         .HasPrecision(18, 2)
@@ -629,9 +769,6 @@ namespace internLoanProjectAPI.Persistence.Migrations
                     b.Property<decimal>("RemainingPrincipal")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -691,22 +828,11 @@ namespace internLoanProjectAPI.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("internLoanProject.Domain.Entities.Customer", b =>
-                {
-                    b.HasOne("internLoanProject.Domain.Entities.CustomerType", "CustomerType")
-                        .WithMany("Customers")
-                        .HasForeignKey("CustomerTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CustomerType");
-                });
-
             modelBuilder.Entity("internLoanProject.Domain.Entities.Identity.AppUser", b =>
                 {
                     b.HasOne("internLoanProject.Domain.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
+                        .WithOne()
+                        .HasForeignKey("internLoanProject.Domain.Entities.Identity.AppUser", "CustomerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Customer");
@@ -758,12 +884,6 @@ namespace internLoanProjectAPI.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("internLoanProject.Domain.Entities.CustomerType", "CustomerType")
-                        .WithMany("LoanProducts")
-                        .HasForeignKey("CustomerTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("internLoanProject.Domain.Entities.LoanType", "LoanType")
                         .WithMany("LoanProducts")
                         .HasForeignKey("LoanTypeId")
@@ -771,8 +891,6 @@ namespace internLoanProjectAPI.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Bank");
-
-                    b.Navigation("CustomerType");
 
                     b.Navigation("LoanType");
                 });
@@ -796,13 +914,6 @@ namespace internLoanProjectAPI.Persistence.Migrations
             modelBuilder.Entity("internLoanProject.Domain.Entities.Customer", b =>
                 {
                     b.Navigation("LoanApplications");
-                });
-
-            modelBuilder.Entity("internLoanProject.Domain.Entities.CustomerType", b =>
-                {
-                    b.Navigation("Customers");
-
-                    b.Navigation("LoanProducts");
                 });
 
             modelBuilder.Entity("internLoanProject.Domain.Entities.LoanCalculation", b =>

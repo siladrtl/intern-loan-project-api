@@ -8,8 +8,10 @@ namespace internLoanProjectAPI.Application.DTOs.Calculation
 {
     public class CreateLoanCalculationDto
     {
-        public Guid LoanProductId { get; set; }
+        public int LoanProductId { get; set; }
+
         public int Term { get; set; }
+
         public decimal Amount { get; set; }
     }
 }

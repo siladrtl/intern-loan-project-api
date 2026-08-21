@@ -1,92 +1,106 @@
 ﻿using internLoanProject.Domain.Entities;
+using internLoanProject.Domain.Entities.Enums;
 using internLoanProject.Domain.Entities.Identity;
+
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace internLoanProjectAPI.Persistence.Contexts
 {
-    public class internLoanProjectAPIDbContext : IdentityDbContext<AppUser, AppRole, Guid>
+    public class internLoanProjectAPIDbContext
+        : IdentityDbContext<AppUser, AppRole, Guid>
     {
-        public internLoanProjectAPIDbContext(DbContextOptions options) : base(options)
+        public internLoanProjectAPIDbContext(
+            DbContextOptions<internLoanProjectAPIDbContext> options)
+            : base(options)
         {
         }
+
+
+        // ==========================================
+        // DB SETS
+        // ==========================================
+
         public DbSet<Bank> Banks { get; set; }
+
         public DbSet<Customer> Customers { get; set; }
-        public DbSet<CustomerType> CustomerTypes { get; set; }
+
         public DbSet<LoanApplication> LoanApplications { get; set; }
+
         public DbSet<LoanCalculation> LoanCalculations { get; set; }
+
         public DbSet<LoanProduct> LoanProducts { get; set; }
+
         public DbSet<LoanType> LoanTypes { get; set; }
+
         public DbSet<PaymentPlan> PaymentPlans { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder builder)
+
+        protected override void OnModelCreating(
+            ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
 
+            // ==========================================
+            // APP USER -> CUSTOMER
+            // ==========================================
 
             builder.Entity<AppUser>()
                 .HasOne(x => x.Customer)
-                .WithMany()
-                .HasForeignKey(x => x.CustomerId)
+                .WithOne()
+                .HasForeignKey<AppUser>(x => x.CustomerId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // BANK: SEED DATA ile eklendi
+
+            // ==========================================
+            // BANK
+            // ==========================================
 
             builder.Entity<Bank>()
                 .HasIndex(x => x.Name)
                 .IsUnique();
 
-            builder.Entity<Bank>().HasData(
-            new Bank
-            {
-                Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-                Name = "Akbank"
-            },
-            new Bank
-            {
-                Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-                Name = "Garanti BBVA"
-            },
-            new Bank
-            {
-                Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
-                Name = "İş Bankası"
-            }
 
-            );
+            // ==========================================
+            // CUSTOMER
+            // ==========================================
+
+            builder.Entity<Customer>()
+                .HasIndex(x => x.NationalId)
+                .IsUnique();
+
+            builder.Entity<Customer>()
+                .HasIndex(x => x.Email)
+                .IsUnique();
+
+            // CustomerType artık enum.
+            // DB'de int olarak tutulacak.
+            builder.Entity<Customer>()
+                .Property(x => x.CustomerType)
+                .HasConversion<int>();
+
+
+            // ==========================================
             // LOAN TYPE
+            // ==========================================
 
             builder.Entity<LoanType>()
                 .HasIndex(x => x.Name)
                 .IsUnique();
 
+            builder.Entity<LoanType>()
+                .Property(x => x.KkdfRate)
+                .HasPrecision(18, 2);
+
+            builder.Entity<LoanType>()
+                .Property(x => x.BsmvRate)
+                .HasPrecision(18, 2);
 
 
-            // CUSTOMER TYPE
-
-            builder.Entity<CustomerType>()
-                .HasIndex(x => x.Name)
-                .IsUnique();
-
-
-            // CUSTOMER
-
-            builder.Entity<Customer>()
-                .HasOne(x => x.CustomerType)
-                .WithMany(x => x.Customers)
-                .HasForeignKey(x => x.CustomerTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-
-
+            // ==========================================
             // LOAN PRODUCT
+            // ==========================================
 
             builder.Entity<LoanProduct>()
                 .Property(x => x.InterestRate)
@@ -99,6 +113,12 @@ namespace internLoanProjectAPI.Persistence.Contexts
             builder.Entity<LoanProduct>()
                 .Property(x => x.MaxAmount)
                 .HasPrecision(18, 2);
+
+
+            // CustomerType enum.
+            builder.Entity<LoanProduct>()
+                .Property(x => x.CustomerType)
+                .HasConversion<int>();
 
 
             // LoanProduct -> Bank
@@ -119,15 +139,9 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .OnDelete(DeleteBehavior.Restrict);
 
 
-            // LoanProduct -> CustomerType
-
-            builder.Entity<LoanProduct>()
-                .HasOne(x => x.CustomerType)
-                .WithMany(x => x.LoanProducts)
-                .HasForeignKey(x => x.CustomerTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
+            // ==========================================
             // LOAN CALCULATION
+            // ==========================================
 
             builder.Entity<LoanCalculation>()
                 .Property(x => x.Amount)
@@ -146,6 +160,14 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .HasPrecision(18, 2);
 
             builder.Entity<LoanCalculation>()
+                .Property(x => x.TotalKkdf)
+                .HasPrecision(18, 2);
+
+            builder.Entity<LoanCalculation>()
+                .Property(x => x.TotalBsmv)
+                .HasPrecision(18, 2);
+
+            builder.Entity<LoanCalculation>()
                 .Property(x => x.TotalPayment)
                 .HasPrecision(18, 2);
 
@@ -158,7 +180,10 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .HasForeignKey(x => x.LoanProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+
+            // ==========================================
             // PAYMENT PLAN
+            // ==========================================
 
             builder.Entity<PaymentPlan>()
                 .Property(x => x.InstallmentAmount)
@@ -170,6 +195,14 @@ namespace internLoanProjectAPI.Persistence.Contexts
 
             builder.Entity<PaymentPlan>()
                 .Property(x => x.InterestAmount)
+                .HasPrecision(18, 2);
+
+            builder.Entity<PaymentPlan>()
+                .Property(x => x.KkdfAmount)
+                .HasPrecision(18, 2);
+
+            builder.Entity<PaymentPlan>()
+                .Property(x => x.BsmvAmount)
                 .HasPrecision(18, 2);
 
             builder.Entity<PaymentPlan>()
@@ -185,7 +218,10 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .HasForeignKey(x => x.LoanCalculationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+
+            // ==========================================
             // LOAN APPLICATION
+            // ==========================================
 
             // LoanApplication -> Customer
 
@@ -204,103 +240,387 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .HasForeignKey(x => x.LoanProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+
             // LoanApplication -> LoanCalculation
-            // 1 LoanCalculation = 1 LoanApplication
+            // 1 hesaplama -> en fazla 1 başvuru
 
             builder.Entity<LoanApplication>()
                 .HasOne(x => x.LoanCalculation)
                 .WithOne(x => x.LoanApplication)
-                .HasForeignKey<LoanApplication>(x => x.LoanCalculationId)
+                .HasForeignKey<LoanApplication>(
+                    x => x.LoanCalculationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-             // =========================
-            // LOAN TYPE
-            // =========================
 
-            var loanType1Id =
-                Guid.Parse("44444444-4444-4444-4444-444444444444");
+            // ==========================================
+            // BANK SEED
+            // ==========================================
 
-            var loanType2Id =
-                Guid.Parse("55555555-5555-5555-5555-555555555555");
+            builder.Entity<Bank>().HasData(
+
+                new Bank
+                {
+                    Id = 1,
+                    Name = "Ziraat Bankası"
+                },
+
+                new Bank
+                {
+                    Id = 2,
+                    Name = "Halkbank"
+                },
+
+                new Bank
+                {
+                    Id = 3,
+                    Name = "VakıfBank"
+                },
+
+                new Bank
+                {
+                    Id = 4,
+                    Name = "İş Bankası"
+                },
+
+                new Bank
+                {
+                    Id = 5,
+                    Name = "Garanti BBVA"
+                },
+
+                new Bank
+                {
+                    Id = 6,
+                    Name = "Yapı Kredi"
+                },
+
+                new Bank
+                {
+                    Id = 7,
+                    Name = "Akbank"
+                },
+
+                new Bank
+                {
+                    Id = 8,
+                    Name = "QNB"
+                },
+
+                new Bank
+                {
+                    Id = 9,
+                    Name = "DenizBank"
+                },
+
+                new Bank
+                {
+                    Id = 10,
+                    Name = "TEB"
+                }
+            );
+
+
+            // ==========================================
+            // LOAN TYPE SEED
+            // ==========================================
 
             builder.Entity<LoanType>().HasData(
+
+                // Genel bireysel tüketici kredisi
                 new LoanType
                 {
-                    Id = loanType1Id,
-                    Name = "Taksitli Kredi"
+                    Id = 1,
+
+                    Name = "İhtiyaç Kredisi",
+
+                    KkdfRate = 15m,
+
+                    BsmvRate = 15m
                 },
+
+
+                // Öğrenciye yönelik tüketici kredisi
                 new LoanType
                 {
-                    Id = loanType2Id,
-                    Name = "Taksitli Ek Hesap"
+                    Id = 2,
+
+                    Name = "Eğitim Kredisi",
+
+                    KkdfRate = 15m,
+
+                    BsmvRate = 15m
+                },
+
+
+                // Ticari/esnaf kredisi
+                new LoanType
+                {
+                    Id = 3,
+
+                    Name = "Esnaf Kredisi",
+
+                    KkdfRate = 0m,
+
+                    // Proje modellemesi için.
+                    BsmvRate = 5m
+                },
+
+
+                // Emekliye özel ihtiyaç ürünü
+                new LoanType
+                {
+                    Id = 4,
+
+                    Name = "Emekli Kredisi",
+
+                    KkdfRate = 15m,
+
+                    BsmvRate = 15m
                 }
             );
 
 
-            // =========================
-            // CUSTOMER TYPE
-            // =========================
-
-            var customerType1Id =
-                Guid.Parse("66666666-6666-6666-6666-666666666666");
-
-            var customerType2Id =
-                Guid.Parse("77777777-7777-7777-7777-777777777777");
-
-            builder.Entity<CustomerType>().HasData(
-                new CustomerType
-                {
-                    Id = customerType1Id,
-                    Name = "Öğrenci"
-                },
-                new CustomerType
-                {
-                    Id = customerType2Id,
-                    Name = "Esnaf"
-                }
-            );
-
-
-            // =========================
-            // LOAN PRODUCT
-            // =========================
+            // ==========================================
+            // LOAN PRODUCT SEED
+            // ==========================================
+       
 
             builder.Entity<LoanProduct>().HasData(
 
+
+                // ======================================
+                // ÖĞRENCİ
+                // ======================================
+
                 new LoanProduct
                 {
-                    Id = Guid.Parse(
-                        "88888888-8888-8888-8888-888888888888"),
+                    Id = 1,
 
-                    Name = "Taksitli Ek Hesap Öğrenci",
+                    Name = "Öğrenci İhtiyaç Kredisi",
 
                     InterestRate = 3.25m,
 
-                    MinAmount = 1000m,
-                    MaxAmount = 50000m,
+                    MinAmount = 5000m,
+                    MaxAmount = 100000m,
 
                     MinTerm = 3,
                     MaxTerm = 24,
 
                     IsActive = true,
 
-                    // Akbank
-                    BankId = Guid.Parse(
-                        "11111111-1111-1111-1111-111111111111"),
+                    BankId = 1,
 
-                    // Taksitli Ek Hesap
-                    LoanTypeId = loanType2Id,
+                    LoanTypeId = 1,
 
-                    // Öğrenci
-                    CustomerTypeId = customerType1Id
+                    CustomerType = CustomerType.Ogrenci
                 },
+
 
                 new LoanProduct
                 {
-                    Id = Guid.Parse(
-                        "99999999-9999-9999-9999-999999999999"),
+                    Id = 2,
 
-                    Name = "Taksitli Kredi Esnaf",
+                    Name = "Eğitim Destek Kredisi",
+
+                    InterestRate = 3.10m,
+
+                    MinAmount = 2000m,
+                    MaxAmount = 150000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 24,
+
+                    IsActive = true,
+
+                    BankId = 4,
+
+                    LoanTypeId = 2,
+
+                    CustomerType = CustomerType.Ogrenci
+                },
+
+
+                new LoanProduct
+                {
+                    Id = 3,
+
+                    Name = "Öğrenci Eğitim Finansmanı",
+
+                    InterestRate = 3.20m,
+
+                    MinAmount = 5000m,
+                    MaxAmount = 100000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 18,
+
+                    IsActive = true,
+
+                    BankId = 7,
+
+                    LoanTypeId = 2,
+
+                    CustomerType = CustomerType.Ogrenci
+                },
+
+
+                new LoanProduct
+                {
+                    Id = 4,
+
+                    Name = "Genç İhtiyaç Kredisi",
+
+                    InterestRate = 3.35m,
+
+                    MinAmount = 5000m,
+                    MaxAmount = 75000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 18,
+
+                    IsActive = true,
+
+                    BankId = 10,
+
+                    LoanTypeId = 1,
+
+                    CustomerType = CustomerType.Ogrenci
+                },
+
+
+                // ======================================
+                // ESNAF
+                // ======================================
+
+                new LoanProduct
+                {
+                    Id = 5,
+
+                    Name = "Esnaf Destek Kredisi",
+
+                    InterestRate = 2.85m,
+
+                    MinAmount = 25000m,
+                    MaxAmount = 750000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 36,
+
+                    IsActive = true,
+
+                    BankId = 2,
+
+                    LoanTypeId = 3,
+
+                    CustomerType = CustomerType.Esnaf
+                },
+
+
+                new LoanProduct
+                {
+                    Id = 6,
+
+                    Name = "Esnaf İşletme Kredisi",
+
+                    InterestRate = 2.95m,
+
+                    MinAmount = 20000m,
+                    MaxAmount = 500000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 36,
+
+                    IsActive = true,
+
+                    BankId = 3,
+
+                    LoanTypeId = 3,
+
+                    CustomerType = CustomerType.Esnaf
+                },
+
+
+                new LoanProduct
+                {
+                    Id = 7,
+
+                    Name = "Esnaf Nakit Destek",
+
+                    InterestRate = 3.05m,
+
+                    MinAmount = 25000m,
+                    MaxAmount = 400000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 24,
+
+                    IsActive = true,
+
+                    BankId = 8,
+
+                    LoanTypeId = 3,
+
+                    CustomerType = CustomerType.Esnaf
+                },
+
+
+                new LoanProduct
+                {
+                    Id = 8,
+
+                    Name = "Esnaf İhtiyaç Kredisi",
+
+                    InterestRate = 3.40m,
+
+                    MinAmount = 10000m,
+                    MaxAmount = 250000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 24,
+
+                    IsActive = true,
+
+                    BankId = 5,
+
+                    LoanTypeId = 1,
+
+                    CustomerType = CustomerType.Esnaf
+                },
+
+
+                new LoanProduct
+                {
+                    Id = 9,
+
+                    Name = "KOBİ Esnaf Destek",
+
+                    InterestRate = 3.00m,
+
+                    MinAmount = 25000m,
+                    MaxAmount = 600000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 36,
+
+                    IsActive = true,
+
+                    BankId = 6,
+
+                    LoanTypeId = 3,
+
+                    CustomerType = CustomerType.Esnaf
+                },
+
+
+                // ======================================
+                // EMEKLİ
+                // ======================================
+
+                new LoanProduct
+                {
+                    Id = 10,
+
+                    Name = "Emekli İhtiyaç Kredisi",
 
                     InterestRate = 2.95m,
 
@@ -308,56 +628,89 @@ namespace internLoanProjectAPI.Persistence.Contexts
                     MaxAmount = 250000m,
 
                     MinTerm = 3,
-                    MaxTerm = 12,
+                    MaxTerm = 24,
 
                     IsActive = true,
 
-                    // Garanti BBVA
-                    BankId = Guid.Parse(
-                        "22222222-2222-2222-2222-222222222222"),
+                    BankId = 1,
 
-                    // Taksitli Kredi
-                    LoanTypeId = loanType1Id,
+                    LoanTypeId = 4,
 
-                    // Esnaf
-                    CustomerTypeId = customerType2Id
+                    CustomerType = CustomerType.Emekli
                 },
+
 
                 new LoanProduct
                 {
-                    Id = Guid.Parse(
-                        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+                    Id = 11,
 
-                    Name = "Taksitli Kredi Öğrenci",
+                    Name = "Emekliye Özel Kredi",
 
-                    InterestRate = 3.10m,
+                    InterestRate = 3.00m,
 
-                    MinAmount = 2000m,
-                    MaxAmount = 75000m,
+                    MinAmount = 5000m,
+                    MaxAmount = 200000m,
 
                     MinTerm = 3,
                     MaxTerm = 24,
 
                     IsActive = true,
 
-                    // İş Bankası
-                    BankId = Guid.Parse(
-                        "33333333-3333-3333-3333-333333333333"),
+                    BankId = 4,
 
-                    // Taksitli Kredi
-                    LoanTypeId = loanType1Id,
+                    LoanTypeId = 4,
 
-                    // Öğrenci
-                    CustomerTypeId = customerType1Id
+                    CustomerType = CustomerType.Emekli
+                },
+
+
+                new LoanProduct
+                {
+                    Id = 12,
+
+                    Name = "Emekli Destek Kredisi",
+
+                    InterestRate = 2.90m,
+
+                    MinAmount = 5000m,
+                    MaxAmount = 250000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 24,
+
+                    IsActive = true,
+
+                    BankId = 3,
+
+                    LoanTypeId = 4,
+
+                    CustomerType = CustomerType.Emekli
+                },
+
+
+                new LoanProduct
+                {
+                    Id = 13,
+
+                    Name = "Emekli İhtiyaç Finansmanı",
+
+                    InterestRate = 3.25m,
+
+                    MinAmount = 5000m,
+                    MaxAmount = 150000m,
+
+                    MinTerm = 3,
+                    MaxTerm = 18,
+
+                    IsActive = true,
+
+                    BankId = 9,
+
+                    LoanTypeId = 1,
+
+                    CustomerType = CustomerType.Emekli
                 }
             );
-
-           
         }
     }
-
-}   
-
-
-
-
+}
