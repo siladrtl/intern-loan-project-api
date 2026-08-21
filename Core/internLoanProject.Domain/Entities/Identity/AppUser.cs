@@ -9,7 +9,7 @@ namespace internLoanProject.Domain.Entities.Identity
 {
     public class AppUser: IdentityUser<Guid>
     {
-        public Guid? CustomerId { get; set; }
+        public int? CustomerId { get; set; }
 
         public Customer? Customer { get; set; }
     }

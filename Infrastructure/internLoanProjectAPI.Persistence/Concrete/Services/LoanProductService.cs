@@ -1,13 +1,10 @@
 ﻿using internLoanProject.Domain.Entities;
+using internLoanProject.Domain.Entities.Enums;
 using internLoanProjectAPI.Application.Abstractions.Services;
 using internLoanProjectAPI.Application.Abstractions.UnitOfWorks;
 using internLoanProjectAPI.Application.DTOs.Product;
+
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace internLoanProjectAPI.Persistence.Concrete.Services
 {
@@ -15,10 +12,17 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        public LoanProductService(IUnitOfWork unitOfWork)
+        public LoanProductService(
+            IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
+
+
+        // ==========================================
+        // TÜM AKTİF ÜRÜNLER
+        // ==========================================
+
         public async Task<List<LoanProductDto>> GetAllAsync()
         {
             return await _unitOfWork
@@ -28,254 +32,430 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 .Select(x => new LoanProductDto
                 {
                     Id = x.Id,
+
                     Name = x.Name,
+
                     InterestRate = x.InterestRate,
+
                     MinAmount = x.MinAmount,
+
                     MaxAmount = x.MaxAmount,
+
                     MinTerm = x.MinTerm,
+
                     MaxTerm = x.MaxTerm,
 
                     BankId = x.BankId,
+
                     BankName = x.Bank.Name,
 
                     LoanTypeId = x.LoanTypeId,
-                    LoanTypeName = x.LoanType.Name
+
+                    LoanTypeName = x.LoanType.Name,
+
+                    CustomerType = x.CustomerType,
+
+                    IsActive = x.IsActive
                 })
                 .ToListAsync();
         }
 
+
+        // ==========================================
+        // KREDİ TÜRÜ + MÜŞTERİ TİPİ
+        // ==========================================
+
         public async Task<List<LoanProductDto>>
             GetByLoanTypeAsync(
-                Guid loanTypeId,
-                Guid customerTypeId)
+                int loanTypeId,
+                CustomerType customerType)
         {
             return await _unitOfWork
                 .GetReadRepository<LoanProduct>()
                 .GetWhere(
                     x =>
                         x.LoanTypeId == loanTypeId &&
-                        x.CustomerTypeId == customerTypeId &&
+                        x.CustomerType == customerType &&
                         x.IsActive,
                     false)
                 .Select(x => new LoanProductDto
                 {
                     Id = x.Id,
+
                     Name = x.Name,
+
                     InterestRate = x.InterestRate,
+
                     MinAmount = x.MinAmount,
+
                     MaxAmount = x.MaxAmount,
+
                     MinTerm = x.MinTerm,
+
                     MaxTerm = x.MaxTerm,
 
                     BankId = x.BankId,
+
                     BankName = x.Bank.Name,
 
                     LoanTypeId = x.LoanTypeId,
-                    LoanTypeName = x.LoanType.Name
+
+                    LoanTypeName = x.LoanType.Name,
+
+                    CustomerType = x.CustomerType,
+
+                    IsActive = x.IsActive
                 })
                 .ToListAsync();
         }
+
+
+        // ==========================================
         // ADMIN - ADD
+        // ==========================================
+
         public async Task<bool> AddAsync(
-            CreateLoanProductRequestDto x)
+            CreateLoanProductRequestDto dto)
         {
             var loanProduct = new LoanProduct
             {
-                Id = Guid.NewGuid(),
+                // Id vermiyoruz.
+                // Database otomatik int ID üretecek.
 
-                Name = x.Name,
+                Name = dto.Name,
 
-                InterestRate = x.InterestRate,
+                InterestRate = dto.InterestRate,
 
-                MinAmount = x.MinAmount,
-                MaxAmount = x.MaxAmount,
+                MinAmount = dto.MinAmount,
 
-                MinTerm = x.MinTerm,
-                MaxTerm = x.MaxTerm,
+                MaxAmount = dto.MaxAmount,
 
-                BankId = x.BankId,
+                MinTerm = dto.MinTerm,
 
-                LoanTypeId = x.LoanTypeId,
+                MaxTerm = dto.MaxTerm,
 
-                CustomerTypeId = x.CustomerTypeId,
+                BankId = dto.BankId,
+
+                LoanTypeId = dto.LoanTypeId,
+
+                CustomerType = dto.CustomerType,
 
                 IsActive = true
             };
+
 
             var result = await _unitOfWork
                 .GetWriteRepository<LoanProduct>()
                 .AddAsync(loanProduct);
 
+
             if (!result)
+            {
                 return false;
+            }
+
 
             await _unitOfWork.SaveAsync();
 
             return true;
         }
 
+
+        // ==========================================
         // ADMIN - UPDATE
+        // ==========================================
+
         public async Task<bool> UpdateAsync(
-            Guid id,
-            UpdateLoanProductRequestDto x)
+            int id,
+            UpdateLoanProductRequestDto dto)
         {
             var loanProduct =
                 await _unitOfWork
                     .GetReadRepository<LoanProduct>()
-                    .GetSingleAsync(x => x.Id == id);
+                    .GetSingleAsync(
+                        x => x.Id == id);
+
 
             if (loanProduct == null)
+            {
                 return false;
+            }
 
-            loanProduct.Name = x.Name;
-            loanProduct.InterestRate = x.InterestRate;
-            loanProduct.MinAmount = x.MinAmount;
-            loanProduct.MaxAmount = x.MaxAmount;
-            loanProduct.MinTerm =  x.MinTerm;
-            loanProduct.MaxTerm = x.MaxTerm;
-            loanProduct.BankId =  x.BankId;
-            loanProduct.LoanTypeId = x.LoanTypeId;
-            loanProduct.CustomerTypeId = x.CustomerTypeId;
-            loanProduct.IsActive = x.IsActive;
 
-            var result = _unitOfWork
-                .GetWriteRepository<LoanProduct>()
-                .Update(loanProduct);
+            loanProduct.Name =
+                dto.Name;
+
+            loanProduct.InterestRate =
+                dto.InterestRate;
+
+            loanProduct.MinAmount =
+                dto.MinAmount;
+
+            loanProduct.MaxAmount =
+                dto.MaxAmount;
+
+            loanProduct.MinTerm =
+                dto.MinTerm;
+
+            loanProduct.MaxTerm =
+                dto.MaxTerm;
+
+            loanProduct.BankId =
+                dto.BankId;
+
+            loanProduct.LoanTypeId =
+                dto.LoanTypeId;
+
+            loanProduct.CustomerType =
+                dto.CustomerType;
+
+            loanProduct.IsActive =
+                dto.IsActive;
+
+
+            var result =
+                _unitOfWork
+                    .GetWriteRepository<LoanProduct>()
+                    .Update(loanProduct);
+
 
             if (!result)
+            {
                 return false;
+            }
+
 
             await _unitOfWork.SaveAsync();
 
             return true;
         }
 
-        // ADMIN - DELETE
 
-        public async Task<bool> DeleteAsync(Guid id)
+        // ==========================================
+        // ADMIN - SOFT DELETE
+        // ==========================================
+
+        public async Task<bool> DeleteAsync(
+            int id)
         {
             var loanProduct =
                 await _unitOfWork
                     .GetReadRepository<LoanProduct>()
-                    .GetSingleAsync(x => x.Id == id);
+                    .GetSingleAsync(
+                        x => x.Id == id);
+
 
             if (loanProduct == null)
+            {
                 return false;
+            }
+
 
             loanProduct.IsActive = false;
 
-            var result = _unitOfWork
-                .GetWriteRepository<LoanProduct>()
-                .Update(loanProduct);
+
+            var result =
+                _unitOfWork
+                    .GetWriteRepository<LoanProduct>()
+                    .Update(loanProduct);
+
 
             if (!result)
+            {
                 return false;
+            }
+
 
             await _unitOfWork.SaveAsync();
 
             return true;
         }
-        public async Task<List<ProductSearchResultDto>> SearchAsync(
-    ProductSearchRequestDto request)
+
+
+        // ==========================================
+        // ÜRÜN ARAMA
+        // ==========================================
+
+        public async Task<List<ProductSearchResultDto>>
+            SearchAsync(
+                ProductSearchRequestDto request)
         {
+            // ------------------------------------------
+            // TEMEL FİLTRE
+            // ------------------------------------------
+
             var query = _unitOfWork
                 .GetReadRepository<LoanProduct>()
                 .GetWhere(
                     x =>
                         x.IsActive &&
-                        x.LoanTypeId == request.LoanTypeId &&
-                        x.MinAmount <= request.Amount &&
-                        x.MaxAmount >= request.Amount &&
-                        x.MinTerm <= request.Term &&
-                        x.MaxTerm >= request.Term,
+
+                        x.LoanTypeId ==
+                        request.LoanTypeId &&
+
+                        x.MinAmount <=
+                        request.Amount &&
+
+                        x.MaxAmount >=
+                        request.Amount &&
+
+                        x.MinTerm <=
+                        request.Term &&
+
+                        x.MaxTerm >=
+                        request.Term,
                     false);
 
-            // Müşteri tipi seçildiyse müşteri tipine göre filtrele
-            if (request.CustomerTypeId.HasValue)
+
+            // ------------------------------------------
+            // MÜŞTERİ TİPİ OPSİYONEL
+            // ------------------------------------------
+
+            if (request.CustomerType.HasValue)
             {
                 query = query.Where(
-                    x => x.CustomerTypeId == request.CustomerTypeId.Value);
+                    x =>
+                        x.CustomerType ==
+                        request.CustomerType.Value);
             }
 
-            // Banka filtresi seçildiyse uygula
+
+            // ------------------------------------------
+            // BANKA FİLTRESİ OPSİYONEL
+            // ------------------------------------------
+
             if (request.BankIds != null &&
                 request.BankIds.Count > 0)
             {
                 query = query.Where(
-                    x => request.BankIds.Contains(x.BankId));
+                    x =>
+                        request.BankIds.Contains(
+                            x.BankId));
             }
 
-            var products = await query
-                .Include(x => x.Bank)
-                .Include(x => x.LoanType)
-                .ToListAsync();
 
-            var results = new List<ProductSearchResultDto>();
+            // ------------------------------------------
+            // İLİŞKİLERİ GETİR
+            // ------------------------------------------
+
+            var products =
+                await query
+                    .Include(x => x.Bank)
+                    .Include(x => x.LoanType)
+                    .ToListAsync();
+
+
+            var results =
+                new List<ProductSearchResultDto>();
+
+
+            // ------------------------------------------
+            // HER ÜRÜN İÇİN HESAPLAMA
+            // ------------------------------------------
 
             foreach (var product in products)
             {
                 decimal monthlyInterestRate =
-                    product.InterestRate / 100;
+                    product.InterestRate / 100m;
+
+
+                decimal kkdfRate =
+                    product.LoanType.KkdfRate / 100m;
+
+
+                decimal bsmvRate =
+                    product.LoanType.BsmvRate / 100m;
+
+
+                // Faiz üzerine uygulanan KKDF ve BSMV
+                // nedeniyle efektif aylık oran
+
+                decimal effectiveMonthlyRate =
+                    monthlyInterestRate *
+                    (1 + kkdfRate + bsmvRate);
+
 
                 decimal monthlyInstallment;
 
-                if (monthlyInterestRate == 0)
+
+                if (effectiveMonthlyRate == 0)
                 {
                     monthlyInstallment =
-                        request.Amount / request.Term;
+                        request.Amount /
+                        request.Term;
                 }
                 else
                 {
+                    decimal factor =
+                        (decimal)Math.Pow(
+                            (double)
+                            (1 + effectiveMonthlyRate),
+                            request.Term);
+
+
                     monthlyInstallment =
                         request.Amount *
-                        monthlyInterestRate *
-                        (decimal)Math.Pow(
-                            (double)(1 + monthlyInterestRate),
-                            request.Term)
+                        effectiveMonthlyRate *
+                        factor
                         /
-                        ((decimal)Math.Pow(
-                            (double)(1 + monthlyInterestRate),
-                            request.Term) - 1);
+                        (factor - 1);
                 }
 
+
                 monthlyInstallment =
-                    Math.Round(monthlyInstallment, 2);
+                    Math.Round(
+                        monthlyInstallment,
+                        2);
+
 
                 decimal totalPayment =
                     Math.Round(
-                        monthlyInstallment * request.Term,
+                        monthlyInstallment *
+                        request.Term,
                         2);
 
-                results.Add(new ProductSearchResultDto
-                {
-                    LoanProductId = product.Id,
 
-                    BankName =
-                        product.Bank.Name,
+                // --------------------------------------
+                // RESPONSE
+                // --------------------------------------
 
-                    LoanTypeName =
-                        product.LoanType.Name,
+                results.Add(
+                    new ProductSearchResultDto
+                    {
+                        LoanProductId =
+                            product.Id,
 
-                    Amount =
-                        request.Amount,
+                        LoanProductName =
+                            product.Name,
 
-                    Term =
-                        request.Term,
+                        BankName =
+                            product.Bank.Name,
 
-                    InterestRate =
-                        product.InterestRate,
+                        LoanTypeName =
+                            product.LoanType.Name,
 
-                    MonthlyInstallment =
-                        monthlyInstallment,
+                        CustomerType =
+                            product.CustomerType,
 
-                    TotalPayment =
-                        totalPayment
-                });
+                        Amount =
+                            request.Amount,
+
+                        Term =
+                            request.Term,
+
+                        InterestRate =
+                            product.InterestRate,
+
+                        MonthlyInstallment =
+                            monthlyInstallment,
+
+                        TotalPayment =
+                            totalPayment
+                    });
             }
+
 
             return results;
         }
-
     }
 }
-    

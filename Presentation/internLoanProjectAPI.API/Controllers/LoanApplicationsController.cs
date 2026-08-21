@@ -9,7 +9,7 @@ namespace internLoanProjectAPI.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-  
+
     public class LoanApplicationsController : ControllerBase
     {
         private readonly ILoanApplicationService _loanApplicationService;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using internLoanProject.Domain.Entities.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,7 +25,7 @@ namespace internLoanProjectAPI.Application.DTOs.Auth
 
         public string District { get; set; }
 
-        public Guid CustomerTypeId { get; set; }
+        public CustomerType CustomerType { get; set; }
 
         public string Password { get; set; }
     }

@@ -3,17 +3,14 @@ using internLoanProject.Domain.Entities.Identity;
 using internLoanProjectAPI.Application.Abstractions.Services;
 using internLoanProjectAPI.Application.Abstractions.UnitOfWorks;
 using internLoanProjectAPI.Application.DTOs.Auth;
-using internLoanProjectAPI.Persistence.Contexts;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
+
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace internLoanProjectAPI.Persistence.Concrete.Services
 {
@@ -22,6 +19,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
         private readonly UserManager<AppUser> _userManager;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _configuration;
+
 
         public AuthService(
             UserManager<AppUser> userManager,
@@ -33,7 +31,11 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             _configuration = configuration;
         }
 
+
+        // ==========================================
         // REGISTER
+        // ==========================================
+
         public async Task<AuthResponseDto> RegisterAsync(
             RegisterRequestDto request)
         {
@@ -51,18 +53,23 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             // Customer oluştur
             var customer = new Customer
             {
-                Id = Guid.NewGuid(),
-
                 FirstName = request.FirstName,
+
                 LastName = request.LastName,
+
                 BirthDate = request.BirthDate,
+
                 NationalId = request.NationalId,
+
                 Email = request.Email,
+
                 PhoneNumber = request.PhoneNumber,
+
                 City = request.City,
+
                 District = request.District,
 
-                CustomerTypeId = request.CustomerTypeId
+                CustomerType = request.CustomerType
             };
 
 
@@ -71,12 +78,23 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 .AddAsync(customer);
 
 
+            // ÖNEMLİ:
+            // Customer.Id artık int ve DB tarafından üretilecek.
+            // Bu yüzden önce Customer'ı kaydediyoruz.
+            await _unitOfWork.SaveAsync();
+
+
+            // Customer kaydedildikten sonra
+            // customer.Id artık 1, 2, 3... şeklinde oluşmuş olacak.
+
+
             // AppUser oluştur
             var user = new AppUser
             {
                 Id = Guid.NewGuid(),
 
                 UserName = request.Email,
+
                 Email = request.Email,
 
                 CustomerId = customer.Id
@@ -93,23 +111,24 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             {
                 var errors = string.Join(
                     ", ",
-                    result.Errors.Select(x => x.Description));
+                    result.Errors.Select(
+                        x => x.Description));
 
                 throw new Exception(errors);
             }
 
 
-            await _unitOfWork.SaveAsync();
-
-
-            // JWT
-            var token = GenerateToken(user);
+            // JWT oluştur
+            var token =
+                GenerateToken(user);
 
 
             return new AuthResponseDto
             {
                 Token = token,
+
                 Email = user.Email!,
+
                 CustomerId = customer.Id
             };
         }
@@ -125,6 +144,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             var user =
                 await _userManager.FindByEmailAsync(
                     request.Email);
+
 
             if (user == null)
             {
@@ -146,39 +166,58 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             }
 
 
-            var token = GenerateToken(user);
+            if (user.CustomerId == null)
+            {
+                throw new Exception(
+                    "Kullanıcıya bağlı müşteri kaydı bulunamadı.");
+            }
+
+
+            var token =
+                GenerateToken(user);
 
 
             return new AuthResponseDto
             {
                 Token = token,
+
                 Email = user.Email!,
-                CustomerId = user.CustomerId!.Value
+
+                CustomerId =
+                    user.CustomerId.Value
             };
         }
 
 
+        // ==========================================
         // JWT OLUŞTUR
-        private string GenerateToken(AppUser user)
+        // ==========================================
+
+        private string GenerateToken(
+            AppUser user)
         {
-            var claims = new List<Claim>
-            {
-                new Claim(
-                    ClaimTypes.NameIdentifier,
-                    user.Id.ToString()),
+            var claims =
+                new List<Claim>
+                {
+                    new Claim(
+                        ClaimTypes.NameIdentifier,
+                        user.Id.ToString()),
 
-                new Claim(
-                    ClaimTypes.Email,
-                    user.Email ?? string.Empty),
+                    new Claim(
+                        ClaimTypes.Email,
+                        user.Email ??
+                        string.Empty),
 
-                new Claim(
-                    "CustomerId",
-                    user.CustomerId?.ToString() ?? string.Empty)
-            };
+                    new Claim(
+                        "CustomerId",
+                        user.CustomerId?.ToString()
+                        ?? string.Empty)
+                };
 
 
             var jwtKey =
                 _configuration["Jwt:Key"];
+
 
             if (string.IsNullOrEmpty(jwtKey))
             {
@@ -189,7 +228,8 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
             var securityKey =
                 new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(jwtKey));
+                    Encoding.UTF8.GetBytes(
+                        jwtKey));
 
 
             var credentials =

@@ -8,13 +8,13 @@ namespace internLoanProjectAPI.Application.DTOs.Application
 {
     public class LoanApplicationDto
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
-        public Guid CustomerId { get; set; }
+        public int CustomerId { get; set; }
 
-        public Guid LoanProductId { get; set; }
+        public int LoanProductId { get; set; }
 
-        public Guid LoanCalculationId { get; set; }
+        public int LoanCalculationId { get; set; }
 
         public string Status { get; set; }
 

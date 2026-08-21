@@ -1,4 +1,5 @@
-﻿using internLoanProjectAPI.Application.DTOs.Product;
+﻿using internLoanProject.Domain.Entities.Enums;
+using internLoanProjectAPI.Application.DTOs.Product;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,19 +10,31 @@ namespace internLoanProjectAPI.Application.Abstractions.Services
 {
     public interface ILoanProductService
     {
-        // Kullanıcı,Admin
+        // Kullanıcı + Admin
         Task<List<LoanProductDto>> GetAllAsync();
 
-        Task<List<LoanProductDto>> GetByLoanTypeAsync(Guid loanTypeId, Guid customerTypeId);
 
-        Task<List<ProductSearchResultDto>> SearchAsync(ProductSearchRequestDto request);
+        Task<List<LoanProductDto>> GetByLoanTypeAsync(
+            int loanTypeId,
+            CustomerType customerType);
+
+
+        Task<List<ProductSearchResultDto>> SearchAsync(
+            ProductSearchRequestDto request);
+
+
         // Admin
-        Task<bool> AddAsync(CreateLoanProductRequestDto dto);
+        Task<bool> AddAsync(
+            CreateLoanProductRequestDto dto);
 
 
-        Task<bool> UpdateAsync(Guid id, UpdateLoanProductRequestDto dto);
+        Task<bool> UpdateAsync(
+            int id,
+            UpdateLoanProductRequestDto dto);
 
-        Task<bool> DeleteAsync(Guid id);
+
+        Task<bool> DeleteAsync(
+            int id);
     }
 }
 

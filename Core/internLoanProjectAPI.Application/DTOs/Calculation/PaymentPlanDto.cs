@@ -18,6 +18,10 @@ namespace internLoanProjectAPI.Application.DTOs.Calculation
 
         public decimal InterestAmount { get; set; }
 
+        public decimal KkdfAmount { get; set; }
+
+        public decimal BsmvAmount { get; set; }
+
         public decimal RemainingPrincipal { get; set; }
     }
 }

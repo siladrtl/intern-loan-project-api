@@ -1,4 +1,5 @@
 ﻿using internLoanProject.Domain.Entities.Common;
+using internLoanProject.Domain.Entities.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,15 +24,13 @@ namespace internLoanProject.Domain.Entities
 
         public bool IsActive { get; set; }
 
-        public Guid BankId { get; set; }
+        public int BankId { get; set; }
 
         public Bank Bank { get; set; }
 
-        public Guid LoanTypeId { get; set; }
+        public int LoanTypeId { get; set; }
 
         public LoanType LoanType { get; set; }
-
-        public Guid CustomerTypeId { get; set; }
 
         public CustomerType CustomerType { get; set; }
 

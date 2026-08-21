@@ -1,4 +1,5 @@
 ﻿using internLoanProject.Domain.Entities.Common;
+using internLoanProject.Domain.Entities.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,8 +25,6 @@ namespace internLoanProject.Domain.Entities
         public string City { get; set; }
 
         public string District { get; set; }
-
-        public Guid CustomerTypeId { get; set; }
 
         public CustomerType CustomerType { get; set; }
 
