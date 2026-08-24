@@ -1,6 +1,9 @@
-﻿using internLoanProjectAPI.Application.Abstractions.Services;
+﻿using FluentValidation;
+
+using internLoanProjectAPI.Application.Abstractions.Services;
 using internLoanProjectAPI.Application.DTOs.Auth;
-using Microsoft.AspNetCore.Http;
+
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace internLoanProjectAPI.API.Controllers
@@ -9,21 +12,49 @@ namespace internLoanProjectAPI.API.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-
         private readonly IAuthService _authService;
+        private readonly IValidator<RegisterRequestDto> _registerValidator;
 
-        public AuthController(IAuthService authService)
+
+        public AuthController(
+            IAuthService authService,
+            IValidator<RegisterRequestDto> registerValidator)
         {
             _authService = authService;
+            _registerValidator = registerValidator;
         }
+
+        // REGISTER
+ 
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(
             [FromBody] RegisterRequestDto request)
         {
+            var validationResult =
+                await _registerValidator
+                    .ValidateAsync(request);
+
+
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new
+                {
+                    errors =
+                        validationResult.Errors
+                            .Select(
+                                x => x.ErrorMessage
+                            )
+                            .ToList()
+                });
+            }
+
+
             try
             {
-                var result = await _authService.RegisterAsync(request);
+                var result =
+                    await _authService
+                        .RegisterAsync(request);
 
                 return Ok(result);
             }
@@ -35,6 +66,9 @@ namespace internLoanProjectAPI.API.Controllers
                 });
             }
         }
+
+        // LOGIN
+      
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(
@@ -43,7 +77,8 @@ namespace internLoanProjectAPI.API.Controllers
             try
             {
                 var result =
-                    await _authService.LoginAsync(request);
+                    await _authService
+                        .LoginAsync(request);
 
                 return Ok(result);
             }
@@ -55,9 +90,8 @@ namespace internLoanProjectAPI.API.Controllers
                 });
             }
         }
+
+
+      
     }
 }
-
-
-
-

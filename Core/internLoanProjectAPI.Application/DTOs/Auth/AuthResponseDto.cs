@@ -12,6 +12,6 @@ namespace internLoanProjectAPI.Application.DTOs.Auth
 
         public string Email { get; set; }
 
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }
     }
 }

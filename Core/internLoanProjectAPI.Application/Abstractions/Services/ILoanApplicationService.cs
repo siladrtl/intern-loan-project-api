@@ -10,6 +10,7 @@ namespace internLoanProjectAPI.Application.Abstractions.Services
     public interface ILoanApplicationService
     {
         Task<LoanApplicationDto> CreateAsync(CreateLoanApplicationDto dto);
-        
+        Task<List<LoanApplicationDto>> GetMyApplicationsAsync();
+
     }
 }

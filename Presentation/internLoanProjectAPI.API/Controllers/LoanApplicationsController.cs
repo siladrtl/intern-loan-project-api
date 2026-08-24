@@ -37,5 +37,24 @@ namespace internLoanProjectAPI.API.Controllers
 
             }
         }
+        [HttpGet("my-applications")]
+        public async Task<IActionResult> GetMyApplications()
+        {
+            try
+            {
+                var result =
+                    await _loanApplicationService
+                        .GetMyApplicationsAsync();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using internLoanProject.Domain.Entities.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,7 +17,13 @@ namespace internLoanProjectAPI.Application.DTOs.Application
 
         public int LoanCalculationId { get; set; }
 
-        public string Status { get; set; }
+        public LoanApplicationStatus Status { get; set; }
+
+        public DateTime ApplicationDate { get; set; }
+
+        public DateTime? DecisionDate { get; set; }
+
+        public string? DecisionNote { get; set; }
 
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using internLoanProjectAPI.Persistence.Contexts;
 
@@ -11,9 +12,11 @@ using internLoanProjectAPI.Persistence.Contexts;
 namespace internLoanProjectAPI.Persistence.Migrations
 {
     [DbContext(typeof(internLoanProjectAPIDbContext))]
-    partial class internLoanProjectAPIDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260824112919_mig_2")]
+    partial class mig_2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

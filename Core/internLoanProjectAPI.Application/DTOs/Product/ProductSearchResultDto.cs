@@ -11,6 +11,8 @@ namespace internLoanProjectAPI.Application.DTOs.Product
     {
         public int LoanProductId { get; set; }
 
+        public int BankId { get; set; }
+
         public string LoanProductName { get; set; }
 
         public string BankName { get; set; }
