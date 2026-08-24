@@ -425,6 +425,8 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                         LoanProductId =
                             product.Id,
 
+                        BankId = product.BankId,
+
                         LoanProductName =
                             product.Name,
 

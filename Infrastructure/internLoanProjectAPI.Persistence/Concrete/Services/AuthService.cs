@@ -1,8 +1,10 @@
 ﻿using internLoanProject.Domain.Entities;
 using internLoanProject.Domain.Entities.Identity;
+
 using internLoanProjectAPI.Application.Abstractions.Services;
 using internLoanProjectAPI.Application.Abstractions.UnitOfWorks;
 using internLoanProjectAPI.Application.DTOs.Auth;
+using internLoanProjectAPI.Persistence.Contexts;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -12,125 +14,251 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
+
 namespace internLoanProjectAPI.Persistence.Concrete.Services
 {
     public class AuthService : IAuthService
     {
         private readonly UserManager<AppUser> _userManager;
+
         private readonly IUnitOfWork _unitOfWork;
+
         private readonly IConfiguration _configuration;
 
+        private readonly internLoanProjectAPIDbContext _context;
 
-        public AuthService(
-            UserManager<AppUser> userManager,
-            IUnitOfWork unitOfWork,
-            IConfiguration configuration)
+
+        public AuthService (UserManager<AppUser> userManager, IUnitOfWork unitOfWork, IConfiguration configuration, internLoanProjectAPIDbContext context)
         {
             _userManager = userManager;
+
             _unitOfWork = unitOfWork;
+
             _configuration = configuration;
+
+            _context = context;
         }
 
-
-        // ==========================================
-        // REGISTER
-        // ==========================================
-
-        public async Task<AuthResponseDto> RegisterAsync(
-            RegisterRequestDto request)
+        // Register
+        public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request)
         {
-            // Email daha önce kayıtlı mı?
-            var existingUser =
-                await _userManager.FindByEmailAsync(request.Email);
+           
+            var email = request.Email.Trim();
+
+            var nationalId = request.NationalId.Trim();
+
+            var existingUser = await _userManager.FindByEmailAsync(email);
+
 
             if (existingUser != null)
             {
+                throw new Exception("Bu e-posta adresi zaten kayıtlı.");
+
+            }
+
+            var existingCustomer = await _unitOfWork
+                    .GetReadRepository<Customer>()
+                    .GetSingleAsync(
+                        x =>
+                            x.NationalId ==
+                            nationalId,
+                        false
+                    );
+
+
+            if (existingCustomer != null)
+            {
                 throw new Exception(
-                    "Bu email adresi zaten kayıtlı.");
+                    "Bu TC Kimlik Numarası ile daha önce kayıt oluşturulmuş."
+                );
             }
 
 
-            // Customer oluştur
-            var customer = new Customer
+            // ======================================
+            // TRANSACTION
+            // ======================================
+
+            await using var transaction =
+                await _context.Database
+                    .BeginTransactionAsync();
+
+
+            try
             {
-                FirstName = request.FirstName,
+                // ==================================
+                // CUSTOMER OLUŞTUR
+                // ==================================
 
-                LastName = request.LastName,
+                var customer =
+                    new Customer
+                    {
+                        FirstName = request.FirstName.Trim(),
 
-                BirthDate = request.BirthDate,
+                        LastName = request.LastName.Trim(),
 
-                NationalId = request.NationalId,
+                        BirthDate = request.BirthDate,
 
-                Email = request.Email,
+                        NationalId = nationalId,
 
-                PhoneNumber = request.PhoneNumber,
+                        Email =
+                            email,
 
-                City = request.City,
+                        PhoneNumber =
+                            request.PhoneNumber.Trim(),
 
-                District = request.District,
+                        City =
+                            request.City.Trim(),
 
-                CustomerType = request.CustomerType
-            };
+                        District =
+                            request.District.Trim(),
 
-
-            await _unitOfWork
-                .GetWriteRepository<Customer>()
-                .AddAsync(customer);
-
-
-            // ÖNEMLİ:
-            // Customer.Id artık int ve DB tarafından üretilecek.
-            // Bu yüzden önce Customer'ı kaydediyoruz.
-            await _unitOfWork.SaveAsync();
-
-
-            // Customer kaydedildikten sonra
-            // customer.Id artık 1, 2, 3... şeklinde oluşmuş olacak.
+                        CustomerType =
+                            request.CustomerType
+                    };
 
 
-            // AppUser oluştur
-            var user = new AppUser
-            {
-                Id = Guid.NewGuid(),
-
-                UserName = request.Email,
-
-                Email = request.Email,
-
-                CustomerId = customer.Id
-            };
+                var customerResult =
+                    await _unitOfWork
+                        .GetWriteRepository<Customer>()
+                        .AddAsync(
+                            customer
+                        );
 
 
-            var result =
-                await _userManager.CreateAsync(
-                    user,
-                    request.Password);
+                if (!customerResult)
+                {
+                    throw new Exception(
+                        "Müşteri kaydı oluşturulamadı."
+                    );
+                }
 
 
-            if (!result.Succeeded)
-            {
-                var errors = string.Join(
-                    ", ",
-                    result.Errors.Select(
-                        x => x.Description));
+                await _unitOfWork
+                    .SaveAsync();
 
-                throw new Exception(errors);
+
+                // ==================================
+                // APP USER OLUŞTUR
+                // ==================================
+
+                var user =
+                    new AppUser
+                    {
+                        UserName =
+                            email,
+
+                        Email =
+                            email,
+
+                        CustomerId =
+                            customer.Id
+                    };
+
+
+                var identityResult =
+                    await _userManager
+                        .CreateAsync(
+                            user,
+                            request.Password
+                        );
+
+
+                if (!identityResult.Succeeded)
+                {
+                    var errors =
+                        string.Join(
+                            ", ",
+                            identityResult.Errors
+                                .Select(
+                                    x =>
+                                        x.Description
+                                )
+                        );
+
+
+                    throw new Exception(
+                        errors
+                    );
+                }
+
+
+                // ==================================
+                // CUSTOMER ROLÜ VER
+                // ==================================
+
+                var roleResult =
+                    await _userManager
+                        .AddToRoleAsync(
+                            user,
+                            "Customer"
+                        );
+
+
+                if (!roleResult.Succeeded)
+                {
+                    var errors =
+                        string.Join(
+                            ", ",
+                            roleResult.Errors
+                                .Select(
+                                    x =>
+                                        x.Description
+                                )
+                        );
+
+
+                    throw new Exception(
+                        errors
+                    );
+                }
+
+
+                // ==================================
+                // HER ŞEY BAŞARILI → COMMIT
+                // ==================================
+
+                await transaction
+                    .CommitAsync();
+
+
+                // ==================================
+                // JWT
+                // ==================================
+
+                var token =
+                    await GenerateTokenAsync(
+                        user
+                    );
+
+
+                // ==================================
+                // RESPONSE
+                // ==================================
+
+                return new AuthResponseDto
+                {
+                    Token =
+                        token,
+
+                    Email =
+                        user.Email!,
+
+                    CustomerId =
+                        customer.Id
+                };
             }
-
-
-            // JWT oluştur
-            var token =
-                GenerateToken(user);
-
-
-            return new AuthResponseDto
+            catch
             {
-                Token = token,
+                // ==================================
+                // HATA → ROLLBACK
+                // ==================================
 
-                Email = user.Email!,
+                await transaction
+                    .RollbackAsync();
 
-                CustomerId = customer.Id
-            };
+
+                throw;
+            }
         }
 
 
@@ -141,50 +269,100 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
         public async Task<AuthResponseDto> LoginAsync(
             LoginRequestDto request)
         {
+            var email =
+                request.Email.Trim();
+
+
+            // ======================================
+            // USER BUL
+            // ======================================
+
             var user =
-                await _userManager.FindByEmailAsync(
-                    request.Email);
+                await _userManager
+                    .FindByEmailAsync(
+                        email
+                    );
 
 
             if (user == null)
             {
                 throw new Exception(
-                    "Email veya şifre hatalı.");
+                    "Email veya şifre hatalı."
+                );
             }
 
 
+            // ======================================
+            // ŞİFRE KONTROLÜ
+            // ======================================
+
             var passwordValid =
-                await _userManager.CheckPasswordAsync(
-                    user,
-                    request.Password);
+                await _userManager
+                    .CheckPasswordAsync(
+                        user,
+                        request.Password
+                    );
 
 
             if (!passwordValid)
             {
                 throw new Exception(
-                    "Email veya şifre hatalı.");
+                    "Email veya şifre hatalı."
+                );
             }
 
 
-            if (user.CustomerId == null)
+            // ======================================
+            // KULLANICI ROLLERİNİ AL
+            // ======================================
+
+            var roles =
+                await _userManager
+                    .GetRolesAsync(
+                        user
+                    );
+
+
+            // ======================================
+            // CUSTOMER İSE CUSTOMER ID ZORUNLU
+            // ADMIN İÇİN CUSTOMER ID GEREKMEZ
+            // ======================================
+
+            if (
+                roles.Contains("Customer") &&
+                user.CustomerId == null
+            )
             {
                 throw new Exception(
-                    "Kullanıcıya bağlı müşteri kaydı bulunamadı.");
+                    "Kullanıcıya bağlı müşteri kaydı bulunamadı."
+                );
             }
 
 
-            var token =
-                GenerateToken(user);
+            // ======================================
+            // JWT
+            // ======================================
 
+            var token =
+                await GenerateTokenAsync(
+                    user
+                );
+
+
+            // ======================================
+            // RESPONSE
+            // ======================================
 
             return new AuthResponseDto
             {
-                Token = token,
+                Token =
+                    token,
 
-                Email = user.Email!,
+                Email =
+                    user.Email!,
 
                 CustomerId =
-                    user.CustomerId.Value
+                    user.CustomerId
             };
         }
 
@@ -193,57 +371,125 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
         // JWT OLUŞTUR
         // ==========================================
 
-        private string GenerateToken(
+        private async Task<string> GenerateTokenAsync(
             AppUser user)
         {
+            // ======================================
+            // TEMEL CLAIMLER
+            // ======================================
+
             var claims =
                 new List<Claim>
                 {
                     new Claim(
                         ClaimTypes.NameIdentifier,
-                        user.Id.ToString()),
+                        user.Id.ToString()
+                    ),
 
                     new Claim(
                         ClaimTypes.Email,
                         user.Email ??
-                        string.Empty),
-
-                    new Claim(
-                        "CustomerId",
-                        user.CustomerId?.ToString()
-                        ?? string.Empty)
+                        string.Empty
+                    )
                 };
 
 
-            var jwtKey =
-                _configuration["Jwt:Key"];
-
-
-            if (string.IsNullOrEmpty(jwtKey))
+            // CustomerId sadece varsa token'a ekle
+            if (user.CustomerId != null)
             {
-                throw new Exception(
-                    "Jwt:Key appsettings.json içerisinde bulunamadı.");
+                claims.Add(
+                    new Claim(
+                        "CustomerId",
+                        user.CustomerId.Value
+                            .ToString()
+                    )
+                );
             }
 
+
+            // ======================================
+            // KULLANICI ROLLERİNİ AL
+            // ======================================
+
+            var roles =
+                await _userManager
+                    .GetRolesAsync(
+                        user
+                    );
+
+
+            // ======================================
+            // ROLLERİ TOKEN'A EKLE
+            // ======================================
+
+            foreach (var role in roles)
+            {
+                claims.Add(
+                    new Claim(
+                        ClaimTypes.Role,
+                        role
+                    )
+                );
+            }
+
+
+            // ======================================
+            // JWT KEY
+            // ======================================
+
+            var jwtKey =
+                _configuration[
+                    "Jwt:Key"
+                ];
+
+
+            if (
+                string.IsNullOrWhiteSpace(
+                    jwtKey
+                )
+            )
+            {
+                throw new Exception(
+                    "Jwt:Key appsettings.json içerisinde bulunamadı."
+                );
+            }
+
+
+            // ======================================
+            // SECURITY KEY
+            // ======================================
 
             var securityKey =
                 new SymmetricSecurityKey(
                     Encoding.UTF8.GetBytes(
-                        jwtKey));
+                        jwtKey
+                    )
+                );
 
+
+            // ======================================
+            // SIGNING
+            // ======================================
 
             var credentials =
                 new SigningCredentials(
                     securityKey,
-                    SecurityAlgorithms.HmacSha256);
+                    SecurityAlgorithms.HmacSha256
+                );
 
+
+            // ======================================
+            // TOKEN
+            // ======================================
 
             var token =
                 new JwtSecurityToken(
-                    claims: claims,
+                    claims:
+                        claims,
 
                     expires:
-                        DateTime.UtcNow.AddHours(2),
+                        DateTime.UtcNow
+                            .AddHours(2),
 
                     signingCredentials:
                         credentials
@@ -251,7 +497,9 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
 
             return new JwtSecurityTokenHandler()
-                .WriteToken(token);
+                .WriteToken(
+                    token
+                );
         }
     }
 }
