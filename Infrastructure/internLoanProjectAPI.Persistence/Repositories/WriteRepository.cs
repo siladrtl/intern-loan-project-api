@@ -11,8 +11,7 @@ namespace internLoanProjectAPI.Persistence.Repositories
     {
         private readonly internLoanProjectAPIDbContext _context;
 
-        public WriteRepository(
-            internLoanProjectAPIDbContext context)
+        public WriteRepository(internLoanProjectAPIDbContext context)
         {
             _context = context;
         }

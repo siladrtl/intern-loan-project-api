@@ -8,6 +8,9 @@ using internLoanProjectAPI.Persistence;
 using internLoanProjectAPI.Persistence.Contexts;
 using internLoanProjectAPI.Persistence.Seed;
 
+using internLoanProjectAPI.SignalR;
+using internLoanProjectAPI.SignalR.Hubs;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -15,19 +18,19 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 
-var builder = WebApplication.CreateBuilder(args);
+var builder =
+    WebApplication.CreateBuilder(args);
 
 
-// ==========================================
+
 // CONTROLLERS
-// ==========================================
+
 
 builder.Services.AddControllers();
 
 
-// ==========================================
 // FLUENT VALIDATION
-// ==========================================
+
 
 builder.Services
     .AddValidatorsFromAssemblyContaining<
@@ -35,16 +38,21 @@ builder.Services
     >();
 
 
-// ==========================================
-// HTTP CONTEXT ACCESSOR
-// ==========================================
+
+// HTTP CONTEXT
+
 
 builder.Services.AddHttpContextAccessor();
 
 
-// ==========================================
+// SIGNALR
+
+
+builder.Services.AddSignalR();
+
+
 // CORS
-// ==========================================
+
 
 builder.Services.AddCors(options =>
 {
@@ -57,31 +65,39 @@ builder.Services.AddCors(options =>
                     "http://localhost:4200"
                 )
                 .AllowAnyHeader()
-                .AllowAnyMethod();
+                .AllowAnyMethod()
+                .AllowCredentials();
         }
     );
 });
 
 
-// ==========================================
+
 // SWAGGER
-// ==========================================
+
 
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
 
 
-// ==========================================
+
 // PERSISTENCE
-// ==========================================
+
 
 builder.Services.AddPersistenceServices();
 
 
-// ==========================================
+
+// SIGNALR SERVICES
+
+
+builder.Services.AddSignalRServices();
+
+
+
 // IDENTITY
-// ==========================================
+
 
 builder.Services
     .AddIdentity<AppUser, AppRole>()
@@ -91,84 +107,110 @@ builder.Services
     .AddDefaultTokenProviders();
 
 
-// ==========================================
-// JWT
-// ==========================================
 
-var jwtKey =
-    builder.Configuration["Jwt:Key"];
+// JWT KEY
 
 
-if (string.IsNullOrWhiteSpace(jwtKey))
-{
-    throw new Exception(
-        "Jwt:Key appsettings.json içerisinde bulunamadý."
-    );
-}
+var jwtKey =  builder.Configuration["Jwt:Key"]
+    ?? throw new Exception("Jwt:Key appsettings.json içerisinde bulunamadý.");
+
+
+
+// JWT AUTHENTICATION
 
 
 builder.Services
     .AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme =
-            JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
 
-        options.DefaultChallengeScheme =
-            JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters =
             new TokenValidationParameters
             {
-                ValidateIssuer =
-                    false,
+                ValidateIssuer = false,
 
-                ValidateAudience =
-                    false,
+                ValidateAudience = false,
 
-                ValidateLifetime =
-                    true,
+                ValidateLifetime = true,
 
-                ValidateIssuerSigningKey =
-                    true,
+                ValidateIssuerSigningKey = true,
 
-                IssuerSigningKey =
-                    new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(
-                            jwtKey
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            };
+
+
+     
+        // SIGNALR JWT TOKEN
+        
+
+        options.Events =
+            new JwtBearerEvents
+            {
+                OnMessageReceived =
+                    context =>
+                    {
+                        var accessToken =
+                            context.Request
+                                .Query["access_token"];
+
+
+                        var path =
+                            context.HttpContext
+                                .Request.Path;
+
+
+                        if (
+                            !string.IsNullOrEmpty(
+                                accessToken
+                            )
+                            &&
+                            path.StartsWithSegments(
+                                "/notificationHub"
+                            )
                         )
-                    )
+                        {
+                            context.Token =
+                                accessToken;
+                        }
+
+
+                        return Task.CompletedTask;
+                    }
             };
     });
 
 
-// ==========================================
 // APPLICATION BUILD
-// ==========================================
-
-var app =
-    builder.Build();
 
 
-// ==========================================
-// IDENTITY ROLE SEED
-// ==========================================
+var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+
+// IDENTITY SEED
+
+
+using (var scope =
+       app.Services.CreateScope())
 {
-    await IdentitySeeder.SeedRolesAsync(
-        scope.ServiceProvider
-    );
+    await IdentitySeeder
+        .SeedRolesAsync(
+            scope.ServiceProvider
+        );
 
-    await IdentitySeeder.SeedAdminAsync(
-        scope.ServiceProvider
-    );
+
+    await IdentitySeeder
+        .SeedAdminAsync(
+            scope.ServiceProvider
+        );
 }
 
-// ==========================================
+
 // DEVELOPMENT
-// ==========================================
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -178,9 +220,8 @@ if (app.Environment.IsDevelopment())
 }
 
 
-// ==========================================
 // MIDDLEWARE
-// ==========================================
+
 
 app.UseHttpsRedirection();
 
@@ -188,23 +229,23 @@ app.UseCors(
     "AllowAngularApp"
 );
 
-
-// Önce kim olduðunu belirle
 app.UseAuthentication();
 
-// Sonra yetkisi var mý kontrol et
 app.UseAuthorization();
 
 
-// ==========================================
 // CONTROLLERS
-// ==========================================
 
 app.MapControllers();
 
 
-// ==========================================
+// SIGNALR HUB
+
+
+app.MapHub<NotificationHub>( "/notificationHub");
+
+
 // RUN
-// ==========================================
+
 
 app.Run();

@@ -336,10 +336,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             }
 
 
-            // ==========================================
-            // APP USER
-            // ==========================================
-
             var user =
                 await _context.Users
                     .FindAsync(userId);
@@ -365,9 +361,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 user.CustomerId.Value;
 
 
-            // ==========================================
-            // MÜŞTERİNİN BAŞVURULARINI GETİR
-            // ==========================================
 
             var applications =
                 await _unitOfWork
@@ -382,9 +375,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     .ToListAsync();
 
 
-            // ==========================================
-            // DTO'YA ÇEVİR
-            // ==========================================
+      
 
             var result =
                 applications
