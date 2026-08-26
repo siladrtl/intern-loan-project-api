@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Infrastructure\internLoanProjectAPI.Persistence\internLoanProjectAPI.Persistence.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\internLoanProjectAPI.SignalR\internLoanProjectAPI.SignalR.csproj" />
   </ItemGroup>
 
 </Project>

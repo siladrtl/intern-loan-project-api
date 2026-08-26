@@ -1,12 +1,18 @@
 ﻿using internLoanProjectAPI.Application.Abstractions.Services;
 using internLoanProjectAPI.Application.DTOs.Application;
+
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace internLoanProjectAPI.API.Controllers
 {
-    public class AdminLoanApplicationController : Controller
+    [ApiController]
+    [Route("api/admin/loan-applications")]
+    [Authorize(Roles = "Admin")]
+    public class AdminLoanApplicationController : ControllerBase
     {
-        private readonly IAdminLoanApplicationService _adminLoanApplicationService;
+        private readonly IAdminLoanApplicationService
+            _adminLoanApplicationService;
 
         public AdminLoanApplicationController(IAdminLoanApplicationService adminLoanApplicationService)
         {
@@ -18,22 +24,21 @@ namespace internLoanProjectAPI.API.Controllers
         {
             try
             {
-                var applications = await _adminLoanApplicationService.GetAllAsync();
-
+                var applications =
+                    await _adminLoanApplicationService
+                        .GetAllAsync();
 
                 return Ok(applications);
             }
             catch (Exception ex)
             {
-                return BadRequest(
-                    new
-                    {
-                        message =
-                            ex.Message
-                    }
-                );
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
         }
+
 
         [HttpPut("{applicationId:int}/approve")]
         public async Task<IActionResult> Approve(
@@ -49,20 +54,14 @@ namespace internLoanProjectAPI.API.Controllers
                             request?.Note
                         );
 
-
-                return Ok(
-                    result
-                );
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                return BadRequest(
-                    new
-                    {
-                        message =
-                            ex.Message
-                    }
-                );
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
@@ -80,20 +79,14 @@ namespace internLoanProjectAPI.API.Controllers
                             request?.Note
                         );
 
-
-                return Ok(
-                    result
-                );
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                return BadRequest(
-                    new
-                    {
-                        message =
-                            ex.Message
-                    }
-                );
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
         }
     }

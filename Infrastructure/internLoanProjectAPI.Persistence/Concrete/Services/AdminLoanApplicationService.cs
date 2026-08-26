@@ -2,6 +2,7 @@
 using internLoanProject.Domain.Entities.Enums;
 using internLoanProject.Domain.Entities.Identity;
 using internLoanProjectAPI.Application.Abstractions.Services;
+using internLoanProjectAPI.Application.Abstractions.SignalR;
 using internLoanProjectAPI.Application.Abstractions.UnitOfWorks;
 using internLoanProjectAPI.Application.DTOs.Application;
 using Microsoft.EntityFrameworkCore;
@@ -18,19 +19,15 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
     public class AdminLoanApplicationService: IAdminLoanApplicationService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly INotificationService _notificationService;
 
-
-        public AdminLoanApplicationService(
-            IUnitOfWork unitOfWork)
+        public AdminLoanApplicationService(IUnitOfWork unitOfWork, INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
 
-
-        // ==========================================
         // TÜM BAŞVURULARI GETİR
-        // ==========================================
-
         public async Task<List<LoanApplicationDto>> GetAllAsync()
         {
             var applications =
@@ -51,11 +48,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 .ToList();
         }
 
-
-        // ==========================================
         // BAŞVURUYU ONAYLA
-        // ==========================================
-
         public async Task<LoanApplicationDto> ApproveAsync(
             int applicationId,
             string? note)
@@ -106,18 +99,21 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
             await _unitOfWork
                 .SaveAsync();
-
+            await _notificationService
+                .SendApplicationStatusChangedAsync(
+                application.CustomerId,
+                application.Id,
+                "Approved",
+     
+                application.DecisionNote
+    );
 
             return MapToDto(
                 application
             );
         }
 
-
-        // ==========================================
         // BAŞVURUYU REDDET
-        // ==========================================
-
         public async Task<LoanApplicationDto> RejectAsync(
             int applicationId,
             string? note)
@@ -168,6 +164,13 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
             await _unitOfWork
                 .SaveAsync();
+            await _notificationService
+            .SendApplicationStatusChangedAsync(
+            application.CustomerId,
+            application.Id,
+            "Rejected",
+            application.DecisionNote
+    );
 
 
             return MapToDto(
@@ -175,39 +178,26 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             );
         }
 
-
-        // ==========================================
-        // ENTITY -> DTO
-        // ==========================================
-
         private static LoanApplicationDto MapToDto(
             LoanApplication application)
         {
             return new LoanApplicationDto
             {
-                Id =
-                    application.Id,
+                Id = application.Id,
 
-                CustomerId =
-                    application.CustomerId,
+                CustomerId = application.CustomerId,
 
-                LoanProductId =
-                    application.LoanProductId,
+                LoanProductId = application.LoanProductId,
 
-                LoanCalculationId =
-                    application.LoanCalculationId,
+                LoanCalculationId = application.LoanCalculationId,
 
-                Status =
-                    application.Status,
+                Status = application.Status,
 
-                ApplicationDate =
-                    application.ApplicationDate,
+                ApplicationDate = application.ApplicationDate,
 
-                DecisionDate =
-                    application.DecisionDate,
+                DecisionDate = application.DecisionDate,
 
-                DecisionNote =
-                    application.DecisionNote
+                DecisionNote = application.DecisionNote
             };
         }
     }
