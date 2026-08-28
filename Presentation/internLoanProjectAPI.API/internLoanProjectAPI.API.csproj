@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>7d68a334-52f3-49be-aef9-a530b39c0438</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Infrastructure\internLoanProjectAPI.Persistence\internLoanProjectAPI.Persistence.csproj" />
     <ProjectReference Include="..\..\Infrastructure\internLoanProjectAPI.SignalR\internLoanProjectAPI.SignalR.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\RabbitMQ\internLoanProjectAPI.RabbitMQ.csproj" />
   </ItemGroup>
 
 </Project>
