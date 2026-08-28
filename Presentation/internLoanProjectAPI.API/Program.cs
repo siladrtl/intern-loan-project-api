@@ -10,6 +10,7 @@ using internLoanProjectAPI.Persistence.Seed;
 
 using internLoanProjectAPI.SignalR;
 using internLoanProjectAPI.SignalR.Hubs;
+using internLoanProjectAPI.RabbitMQ;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -89,12 +90,14 @@ builder.Services.AddPersistenceServices();
 
 
 
+
 // SIGNALR SERVICES
 
 
 builder.Services.AddSignalRServices();
 
-
+// RABBITMQ
+builder.Services.AddRabbitMQServices();
 
 // IDENTITY
 

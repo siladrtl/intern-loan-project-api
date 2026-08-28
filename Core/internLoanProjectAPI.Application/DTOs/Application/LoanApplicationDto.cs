@@ -1,9 +1,4 @@
 ﻿using internLoanProject.Domain.Entities.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace internLoanProjectAPI.Application.DTOs.Application
 {
@@ -13,20 +8,31 @@ namespace internLoanProjectAPI.Application.DTOs.Application
 
         public int CustomerId { get; set; }
 
+        public string CustomerName { get; set; } = null!;
+
+
         public int LoanProductId { get; set; }
+
+        public string LoanProductName { get; set; } = null!;
+
+        public string BankName { get; set; } = null!;
 
         public int LoanCalculationId { get; set; }
 
+        public decimal Amount { get; set; }
+
+        public int Term { get; set; }
+
+        public decimal MonthlyInstallment { get; set; }
+
+
         public LoanApplicationStatus Status { get; set; }
+
 
         public DateTime ApplicationDate { get; set; }
 
         public DateTime? DecisionDate { get; set; }
 
         public string? DecisionNote { get; set; }
-
     }
 }
-
-
-
