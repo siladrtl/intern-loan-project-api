@@ -20,8 +20,12 @@ namespace internLoanProjectAPI.RabbitMQ.Email
             _configuration = configuration;
         }
 
-        public async Task SendAsync(string to, string subject, string body)
-
+        public async Task SendAsync(
+            string to,
+            string subject,
+            string body,
+            byte[]? attachmentBytes = null,
+            string? attachmentFileName = null)
         {
             var email = _configuration["EmailSettings:Email"];
             var password = _configuration["EmailSettings:Password"];
@@ -31,28 +35,35 @@ namespace internLoanProjectAPI.RabbitMQ.Email
                 throw new Exception("Email ayarları bulunamadı.");
             }
 
-
             using var smtpClient = new SmtpClient("smtp.gmail.com", 587)
             {
-                    Credentials = new NetworkCredential(email, password),
-                    EnableSsl = true
+                Credentials = new NetworkCredential(email, password),
+                EnableSsl = true
             };
-
 
             using var mailMessage = new MailMessage
             {
-                    From = new MailAddress(email),
-                    Subject = subject,
-                    Body = body, 
-                    IsBodyHtml = true    
+                From = new MailAddress(email, "Kredi Uygulaması"),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true
             };
-           
+
             mailMessage.To.Add(to);
 
-            await smtpClient
-                .SendMailAsync(mailMessage);
-                   
+            // ======================================
+            // PDF ATTACHMENT
+            // ======================================
+            if (attachmentBytes != null && attachmentBytes.Length > 0)
+            {
+                var stream = new MemoryStream(attachmentBytes);
+                var attachment = new Attachment(stream, attachmentFileName ?? "OdemePlani.pdf", "application/pdf");
+                mailMessage.Attachments.Add(attachment);
+            }
+
+            await smtpClient.SendMailAsync(mailMessage);
         }
+
     }
 }
 

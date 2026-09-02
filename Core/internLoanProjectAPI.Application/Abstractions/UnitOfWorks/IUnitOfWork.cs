@@ -14,6 +14,7 @@ namespace internLoanProjectAPI.Application.Abstractions.UnitOfWorks
         IWriteRepository<T> GetWriteRepository<T>() where T : BaseEntity, new();
         Task<int> SaveAsync();
         int Save();
-
     }
 }
+
+

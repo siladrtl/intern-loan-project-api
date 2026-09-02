@@ -5,9 +5,13 @@ using System.Linq;
 
 namespace internLoanProjectAPI.Application.Validators.Auth
 {
-    public class RegisterRequestDtoValidator
-        : AbstractValidator<RegisterRequestDto>
+    public class RegisterRequestDtoValidator: AbstractValidator<RegisterRequestDto>
     {
+        private const string LetterPattern = @"^[a-zA-ZçÇğĞıİöÖşŞüÜ\s'-]+$";
+
+        private const string EmailPattern = @"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$";
+
+
         public RegisterRequestDtoValidator()
         {
             // ==========================================
@@ -17,10 +21,17 @@ namespace internLoanProjectAPI.Application.Validators.Auth
             RuleFor(x => x.FirstName)
                 .NotEmpty()
                 .WithMessage("Ad alanı zorunludur.")
+
                 .MinimumLength(2)
                 .WithMessage("Ad en az 2 karakter olmalıdır.")
+
                 .MaximumLength(50)
-                .WithMessage("Ad en fazla 50 karakter olabilir.");
+                .WithMessage("Ad en fazla 50 karakter olabilir.")
+
+                .Matches(LetterPattern)
+                .WithMessage(
+                    "Ad yalnızca harflerden oluşmalıdır."
+                );
 
 
             // ==========================================
@@ -30,72 +41,152 @@ namespace internLoanProjectAPI.Application.Validators.Auth
             RuleFor(x => x.LastName)
                 .NotEmpty()
                 .WithMessage("Soyad alanı zorunludur.")
+
                 .MinimumLength(2)
                 .WithMessage("Soyad en az 2 karakter olmalıdır.")
+
                 .MaximumLength(50)
-                .WithMessage("Soyad en fazla 50 karakter olabilir.");
+                .WithMessage("Soyad en fazla 50 karakter olabilir.")
+
+                .Matches(LetterPattern)
+                .WithMessage(
+                    "Soyad yalnızca harflerden oluşmalıdır."
+                );
 
 
-            
+            // ==========================================
             // E-POSTA
+            // ==========================================
+
             RuleFor(x => x.Email)
                 .NotEmpty()
                 .WithMessage("E-posta alanı zorunludur.")
+
+                .MaximumLength(150)
+                .WithMessage(
+                    "E-posta en fazla 150 karakter olabilir."
+                )
+
                 .EmailAddress()
-                .WithMessage("Geçerli bir e-posta adresi giriniz.");
+                .WithMessage(
+                    "Geçerli bir e-posta adresi giriniz."
+                )
+
+                .Matches(EmailPattern)
+                .WithMessage(
+                    "Geçerli bir e-posta adresi giriniz."
+                );
 
 
-      
+            // ==========================================
             // TC KİMLİK NUMARASI
+            // ==========================================
+
             RuleFor(x => x.NationalId)
                 .NotEmpty()
-                .WithMessage("TC Kimlik Numarası zorunludur.")
+                .WithMessage(
+                    "TC Kimlik Numarası zorunludur."
+                )
+
                 .Must(BeValidTurkishIdentityNumber)
                 .WithMessage(
                     "Geçerli bir TC Kimlik Numarası giriniz."
                 );
 
 
+            // ==========================================
             // TELEFON
+            // ==========================================
+
             RuleFor(x => x.PhoneNumber)
                 .NotEmpty()
-                .WithMessage("Telefon numarası zorunludur.")
+                .WithMessage(
+                    "Telefon numarası zorunludur."
+                )
+
                 .Matches(@"^5\d{9}$")
                 .WithMessage(
                     "Telefon numarasını 5XXXXXXXXX formatında giriniz."
                 );
 
 
+            // ==========================================
             // DOĞUM TARİHİ
+            // ==========================================
+
             RuleFor(x => x.BirthDate)
                 .NotEmpty()
-                .WithMessage("Doğum tarihi zorunludur.")
+                .WithMessage(
+                    "Doğum tarihi zorunludur."
+                )
+
+                .Must(BeValidBirthDate)
+                .WithMessage(
+                    "Geçerli bir doğum tarihi giriniz."
+                )
+
                 .Must(BeAtLeast18YearsOld)
                 .WithMessage(
                     "Kayıt olabilmek için en az 18 yaşında olmalısınız."
                 );
 
 
+            // ==========================================
             // ŞEHİR
+            // ==========================================
+
             RuleFor(x => x.City)
                 .NotEmpty()
-                .WithMessage("Şehir alanı zorunludur.")
+                .WithMessage(
+                    "Şehir alanı zorunludur."
+                )
+
+                .MinimumLength(2)
+                .WithMessage(
+                    "Şehir en az 2 karakter olmalıdır."
+                )
+
                 .MaximumLength(50)
                 .WithMessage(
                     "Şehir en fazla 50 karakter olabilir."
+                )
+
+                .Matches(LetterPattern)
+                .WithMessage(
+                    "Şehir yalnızca harflerden oluşmalıdır."
                 );
 
+
+            // ==========================================
             // İLÇE
+            // ==========================================
+
             RuleFor(x => x.District)
                 .NotEmpty()
-                .WithMessage("İlçe alanı zorunludur.")
+                .WithMessage(
+                    "İlçe alanı zorunludur."
+                )
+
+                .MinimumLength(2)
+                .WithMessage(
+                    "İlçe en az 2 karakter olmalıdır."
+                )
+
                 .MaximumLength(50)
                 .WithMessage(
                     "İlçe en fazla 50 karakter olabilir."
+                )
+
+                .Matches(LetterPattern)
+                .WithMessage(
+                    "İlçe yalnızca harflerden oluşmalıdır."
                 );
 
 
+            // ==========================================
             // MÜŞTERİ TİPİ
+            // ==========================================
+
             RuleFor(x => x.CustomerType)
                 .IsInEnum()
                 .WithMessage(
@@ -103,26 +194,57 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                 );
 
 
+            // ==========================================
             // ŞİFRE
+            // ==========================================
+
             RuleFor(x => x.Password)
                 .NotEmpty()
-                .WithMessage("Şifre alanı zorunludur.")
+                .WithMessage(
+                    "Şifre alanı zorunludur."
+                )
+
                 .MinimumLength(8)
                 .WithMessage(
                     "Şifre en az 8 karakter olmalıdır."
                 )
+
+                .MaximumLength(64)
+                .WithMessage(
+                    "Şifre en fazla 64 karakter olabilir."
+                )
+
                 .Matches("[A-Z]")
                 .WithMessage(
                     "Şifre en az bir büyük harf içermelidir."
                 )
+
                 .Matches("[a-z]")
                 .WithMessage(
                     "Şifre en az bir küçük harf içermelidir."
                 )
+
                 .Matches("[0-9]")
                 .WithMessage(
                     "Şifre en az bir rakam içermelidir."
                 );
+        }
+
+
+        // ==========================================
+        // GEÇERLİ DOĞUM TARİHİ
+        // ==========================================
+
+        private static bool BeValidBirthDate(
+            DateTime birthDate)
+        {
+            if (birthDate == default)
+            {
+                return false;
+            }
+
+            return birthDate.Date <=
+                   DateTime.Today;
         }
 
 
@@ -134,7 +256,9 @@ namespace internLoanProjectAPI.Application.Validators.Auth
             DateTime birthDate)
         {
             if (birthDate == default)
+            {
                 return false;
+            }
 
             return birthDate.Date <=
                    DateTime.Today.AddYears(-18);
@@ -142,38 +266,56 @@ namespace internLoanProjectAPI.Application.Validators.Auth
 
 
         // ==========================================
-        // TC KİMLİK NUMARASI ALGORİTMA KONTROLÜ
+        // TC KİMLİK NUMARASI
         // ==========================================
 
         private static bool BeValidTurkishIdentityNumber(
             string nationalId)
         {
-            if (string.IsNullOrWhiteSpace(nationalId))
+            if (
+                string.IsNullOrWhiteSpace(
+                    nationalId
+                )
+            )
+            {
                 return false;
+            }
 
 
-            // 11 karakter olmalı
-            if (nationalId.Length != 11)
+            if (
+                nationalId.Length != 11
+            )
+            {
                 return false;
+            }
 
 
-            // Sadece rakam olmalı
-            if (!nationalId.All(char.IsDigit))
+            if (
+                !nationalId.All(
+                    char.IsDigit
+                )
+            )
+            {
                 return false;
+            }
 
 
-            // İlk rakam 0 olamaz
-            if (nationalId[0] == '0')
+            if (
+                nationalId[0] == '0'
+            )
+            {
                 return false;
+            }
 
 
             int[] digits =
                 nationalId
-                    .Select(x => x - '0')
+                    .Select(
+                        x => x - '0'
+                    )
                     .ToArray();
 
 
-            // 1, 3, 5, 7 ve 9. haneler
             int oddSum =
                 digits[0] +
                 digits[2] +
@@ -182,7 +324,6 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                 digits[8];
 
 
-            // 2, 4, 6 ve 8. haneler
             int evenSum =
                 digits[1] +
                 digits[3] +
@@ -190,41 +331,36 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                 digits[7];
 
 
-            // 10. hane kontrolü
             int tenthDigit =
-                ((oddSum * 7) - evenSum) % 10;
+                ((oddSum * 7) - evenSum) %
+                10;
 
 
-            if (tenthDigit < 0)
+            if (
+                tenthDigit < 0
+            )
             {
                 tenthDigit += 10;
             }
 
 
-            if (digits[9] != tenthDigit)
-            {
-                return false;
-            }
-
-
-            // İlk 10 hanenin toplamı
-            int firstTenSum =
-                digits
-                    .Take(10)
-                    .Sum();
-
-
-            // 11. hane kontrolü
             if (
-                digits[10] !=
-                firstTenSum % 10
+                digits[9] != tenthDigit
             )
             {
                 return false;
             }
 
 
-            return true;
+            int firstTenSum =
+                digits
+                    .Take(10)
+                    .Sum();
+
+
+            return
+                digits[10] ==
+                firstTenSum % 10;
         }
     }
 }

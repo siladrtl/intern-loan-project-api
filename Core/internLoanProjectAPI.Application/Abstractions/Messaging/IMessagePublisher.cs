@@ -11,3 +11,4 @@ namespace internLoanProjectAPI.Application.Abstractions.Messaging
         Task PublishAsync<T>(T message, string queueName);
     }
 }
+                                             

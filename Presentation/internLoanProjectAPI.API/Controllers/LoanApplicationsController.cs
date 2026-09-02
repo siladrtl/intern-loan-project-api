@@ -37,6 +37,38 @@ namespace internLoanProjectAPI.API.Controllers
 
             }
         }
+
+        [HttpGet( "check-eligibility/{loanProductId}")]
+        public async Task<IActionResult>  CheckEligibility(int loanProductId)
+        {
+            try
+            {
+                var isEligible = await _loanApplicationService
+                        .CheckEligibilityAsync(loanProductId);
+
+                return Ok(
+                    new
+                    {
+                        isEligible,
+
+                        message =
+                            isEligible
+                                ? "Müşteri tipi bu kredi ürünü için uygundur."
+                                : "Bu kredi ürünü müşteri tipinize uygun değildir."
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(
+                    new
+                    {
+                        message =
+                            ex.Message
+                    }
+                );
+            }
+        }
         [HttpGet("my-applications")]
         public async Task<IActionResult> GetMyApplications()
         {
