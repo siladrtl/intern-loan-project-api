@@ -24,10 +24,10 @@ namespace internLoanProjectAPI.RabbitMQ
             await using var connection = await factory.CreateConnectionAsync();
 
 
-            await using var channel = await connection.CreateChannelAsync();
+            await using var channel = await connection.CreateChannelAsync(); //baglantiyi actin ve kapatmayi garanti ediyorsun
+            
 
-
-            await channel.QueueDeclareAsync(
+            await channel.QueueDeclareAsync( //kuyruk yoksa olusturdugun yer
                 queue: queueName,
                 durable: true,
                 exclusive: false,
@@ -35,7 +35,7 @@ namespace internLoanProjectAPI.RabbitMQ
             );
 
 
-            var json = JsonSerializer.Serialize(message);
+            var json = JsonSerializer.Serialize(message); //mesaji json-> byte dizisine cevirdigin yer 
             var body = Encoding.UTF8.GetBytes(json);
                 
             await channel.BasicPublishAsync(

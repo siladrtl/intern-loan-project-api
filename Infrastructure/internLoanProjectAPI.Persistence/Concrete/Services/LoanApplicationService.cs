@@ -136,7 +136,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     LoanProductId = dto.LoanProductId,
                     LoanCalculationId = dto.LoanCalculationId,
                     Status = LoanApplicationStatus.Pending,
-                    ApplicationDate = DateTime.UtcNow,
+                    ApplicationDate = DateTime.Now,
                     DecisionDate = null,
                     DecisionNote = null
                 };
@@ -173,7 +173,109 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
             };
         }
-     
+
+        // Müşteri kredi ürününe uygun mu?
+        public async Task<bool> CheckEligibilityAsync(
+            int loanProductId)
+        {
+            // JWT User Id
+            var userIdClaim = _httpContextAccessor
+                    .HttpContext?
+                    .User
+                    .FindFirst(
+                        ClaimTypes.NameIdentifier
+                    );
+
+
+            if (userIdClaim == null)
+            {
+                throw new Exception(
+                    "Kullanıcı kimliği bulunamadı."
+                );
+            }
+
+
+            if (
+                !Guid.TryParse(
+                    userIdClaim.Value,
+                    out Guid userId
+                )
+            )
+            {
+                throw new Exception(
+                    "Geçersiz kullanıcı kimliği."
+                );
+            }
+
+
+            // AppUser bul
+            var user =
+                await _context.Users
+                    .FindAsync(userId);
+
+
+            if (user == null)
+            {
+                throw new Exception(
+                    "Kullanıcı bulunamadı."
+                );
+            }
+
+
+            if (user.CustomerId == null)
+            {
+                throw new Exception(
+                    "Kullanıcıya bağlı müşteri kaydı bulunamadı."
+                );
+            }
+
+
+            // Customer bul
+            var customer =
+                await _unitOfWork
+                    .GetReadRepository<Customer>()
+                    .GetSingleAsync(
+                        x =>
+                            x.Id ==
+                            user.CustomerId.Value,
+                        false
+                    );
+
+
+            if (customer == null)
+            {
+                throw new Exception(
+                    "Müşteri kaydı bulunamadı."
+                );
+            }
+
+
+            // Kredi ürünü bul
+            var loanProduct =
+                await _unitOfWork
+                    .GetReadRepository<LoanProduct>()
+                    .GetSingleAsync(
+                        x =>
+                            x.Id == loanProductId &&
+                            x.IsActive,
+                        false
+                    );
+
+
+            if (loanProduct == null)
+            {
+                throw new Exception(
+                    "Aktif kredi ürünü bulunamadı."
+                );
+            }
+
+
+            // Müşteri tipi ürünle eşleşiyor mu?
+            return
+                loanProduct.CustomerType ==
+                customer.CustomerType;
+        }
+
         //Musterinin kendi basvurularini getir
         public async Task<List<LoanApplicationDto>>GetMyApplicationsAsync()
         {

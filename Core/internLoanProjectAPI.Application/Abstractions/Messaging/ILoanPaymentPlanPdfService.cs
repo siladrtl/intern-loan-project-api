@@ -1,4 +1,5 @@
-﻿using System;
+﻿using internLoanProject.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace internLoanProjectAPI.Application.Abstractions.Messaging
 {
-    public interface IEmailService
+    public interface ILoanPaymentPlanPdfService
     {
-        Task SendAsync(string to, string subject, string body, byte[]? attachmentBytes = null, string? attachmentFileName = null);
+        byte[] Create(LoanApplication application);
     }
 }

@@ -295,7 +295,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                             i,
 
                         DueDate =
-                            DateTime.UtcNow.AddMonths(i),
+                            DateTime.Now.AddMonths(i),
 
                         InstallmentAmount =
                             monthlyInstallment,

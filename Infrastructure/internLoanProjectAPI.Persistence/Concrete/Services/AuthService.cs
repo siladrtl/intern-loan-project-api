@@ -28,7 +28,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
         private readonly internLoanProjectAPIDbContext _context;
 
 
-        public AuthService (UserManager<AppUser> userManager, IUnitOfWork unitOfWork, IConfiguration configuration, internLoanProjectAPIDbContext context)
+        public AuthService(UserManager<AppUser> userManager, IUnitOfWork unitOfWork, IConfiguration configuration, internLoanProjectAPIDbContext context)
         {
             _userManager = userManager;
 
@@ -42,7 +42,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
         // Register
         public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request)
         {
-           
+
             var email = request.Email.Trim();
 
             var nationalId = request.NationalId.Trim();
@@ -372,7 +372,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
         // ==========================================
 
         private async Task<string> GenerateTokenAsync(
-            AppUser user)
+     AppUser user)
         {
             // ======================================
             // TEMEL CLAIMLER
@@ -381,22 +381,26 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             var claims =
                 new List<Claim>
                 {
-                    new Claim(
-                        ClaimTypes.NameIdentifier,
-                        user.Id.ToString()
-                    ),
+            new Claim(
+                ClaimTypes.NameIdentifier,
+                user.Id.ToString()
+            ),
 
-                    new Claim(
-                        ClaimTypes.Email,
-                        user.Email ??
-                        string.Empty
-                    )
+            new Claim(
+                ClaimTypes.Email,
+                user.Email ??
+                string.Empty
+            )
                 };
 
 
-            // CustomerId sadece varsa token'a ekle
+            // ======================================
+            // CUSTOMER BİLGİLERİ
+            // ======================================
+
             if (user.CustomerId != null)
             {
+                // CustomerId
                 claims.Add(
                     new Claim(
                         "CustomerId",
@@ -404,6 +408,39 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                             .ToString()
                     )
                 );
+
+
+                // Customer kaydını getir
+                var customer =
+                    await _unitOfWork
+                        .GetReadRepository<Customer>()
+                        .GetSingleAsync(
+                            x =>
+                                x.Id ==
+                                user.CustomerId.Value,
+                            false
+                        );
+
+
+                if (customer != null)
+                {
+                    // Ad
+                    claims.Add(
+                        new Claim(
+                            "FirstName",
+                            customer.FirstName
+                        )
+                    );
+
+
+                    // Soyad
+                    claims.Add(
+                        new Claim(
+                            "LastName",
+                            customer.LastName
+                        )
+                    );
+                }
             }
 
 
@@ -488,7 +525,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                         claims,
 
                     expires:
-                        DateTime.UtcNow
+                        DateTime.Now
                             .AddHours(2),
 
                     signingCredentials:

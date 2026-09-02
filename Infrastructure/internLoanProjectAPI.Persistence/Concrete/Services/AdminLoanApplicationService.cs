@@ -67,7 +67,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
 
             application.Status = LoanApplicationStatus.Approved;
-            application.DecisionDate = DateTime.UtcNow;
+            application.DecisionDate = DateTime.Now;
             application.DecisionNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
 
 
@@ -88,19 +88,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             await _messagePublisher.PublishAsync(
                 new LoanApplicationEmailMessage
                 {
-                    ApplicationId = application.Id,
-
-                    CustomerId = application.CustomerId,
-
-                    Email = application.Customer.Email,
-
-                    CustomerName = $"{application.Customer.FirstName} {application.Customer.LastName}",
-
-                    Status = "Approved",
-
-                    Subject = "Kredi Başvurunuz Sonuçlandı",
-
-                    Message = "Kredi başvurunuz onaylanmıştır."
+                    ApplicationId = application.Id
                 },
                 "email-notification-queue"
             );
@@ -127,7 +115,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
 
             application.Status = LoanApplicationStatus.Rejected;
-            application.DecisionDate = DateTime.UtcNow;
+            application.DecisionDate = DateTime.Now;
             application.DecisionNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
 
 
@@ -148,20 +136,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             await _messagePublisher.PublishAsync(
                 new LoanApplicationEmailMessage
                 {
-                    ApplicationId = application.Id,
-
-                    CustomerId = application.CustomerId,
-
-                    Email = application.Customer.Email,
-
-                    CustomerName =
-                        $"{application.Customer.FirstName} {application.Customer.LastName}",
-
-                    Status = "Rejected",
-
-                    Subject = "Kredi Başvurunuz Sonuçlandı",
-
-                    Message = "Kredi başvurunuz reddedilmiştir."
+                    ApplicationId = application.Id
                 },
                 "email-notification-queue"
             );

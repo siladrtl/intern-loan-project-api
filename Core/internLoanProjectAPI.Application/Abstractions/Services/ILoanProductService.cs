@@ -12,29 +12,15 @@ namespace internLoanProjectAPI.Application.Abstractions.Services
     {
         // Kullanıcı + Admin
         Task<List<LoanProductDto>> GetAllAsync();
-
-
-        Task<List<LoanProductDto>> GetByLoanTypeAsync(
-            int loanTypeId,
-            CustomerType customerType);
-
-
-        Task<List<ProductSearchResultDto>> SearchAsync(
-            ProductSearchRequestDto request);
-
+        Task<List<LoanProductDto>> GetByLoanTypeAsync(int loanTypeId, CustomerType customerType);
+        Task<List<ProductSearchResultDto>> SearchAsync(ProductSearchRequestDto request);
 
         // Admin
-        Task<bool> AddAsync(
-            CreateLoanProductRequestDto dto);
+        Task<bool> AddAsync(CreateLoanProductRequestDto dto);
 
+        Task<bool> UpdateAsync(int id, UpdateLoanProductRequestDto dto);
 
-        Task<bool> UpdateAsync(
-            int id,
-            UpdateLoanProductRequestDto dto);
-
-
-        Task<bool> DeleteAsync(
-            int id);
+        Task<bool> DeleteAsync(int id);
     }
 }
 
