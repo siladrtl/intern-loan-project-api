@@ -1,26 +1,44 @@
 using FluentValidation;
-
 using internLoanProject.Domain.Entities.Identity;
-
+using internLoanProjectAPI.API.Middleware;
 using internLoanProjectAPI.Application.Validators.Auth;
-
 using internLoanProjectAPI.Persistence;
 using internLoanProjectAPI.Persistence.Contexts;
 using internLoanProjectAPI.Persistence.Seed;
-
+using internLoanProjectAPI.RabbitMQ;
 using internLoanProjectAPI.SignalR;
 using internLoanProjectAPI.SignalR.Hubs;
-using internLoanProjectAPI.RabbitMQ;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
-
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using System.Text;
+
 
 
 var builder =
     WebApplication.CreateBuilder(args);
+
+Logger log = new LoggerConfiguration()
+    .MinimumLevel.Information()
+
+   
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+
+    .WriteTo.Console()
+
+    .WriteTo.File(
+        "Logs/log-.txt",
+        rollingInterval: RollingInterval.Day
+    )
+
+    
+    .CreateLogger();
+builder.Host.UseSerilog(log);
 
 
 
@@ -193,6 +211,7 @@ builder.Services
 var app = builder.Build();
 
 
+
 // IDENTITY SEED
 
 
@@ -231,6 +250,8 @@ app.UseHttpsRedirection();
 app.UseCors(
     "AllowAngularApp"
 );
+
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 app.UseAuthentication();
 
