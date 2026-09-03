@@ -7,6 +7,7 @@ using internLoanProjectAPI.Application.Abstractions.UnitOfWorks;
 using internLoanProjectAPI.Application.DTOs.Application;
 using internLoanProjectAPI.Application.Messages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 
 namespace internLoanProjectAPI.Persistence.Concrete.Services
@@ -20,12 +21,16 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
         private readonly IMessagePublisher _messagePublisher;
 
-        public AdminLoanApplicationService(IUnitOfWork unitOfWork, INotificationService notificationService, IMessagePublisher messagePublisher)
+        private readonly ILogger<AdminLoanApplicationService> _logger;
+
+        public AdminLoanApplicationService(IUnitOfWork unitOfWork, INotificationService notificationService, IMessagePublisher messagePublisher, ILogger<AdminLoanApplicationService> logger)
         {
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
             _messagePublisher = messagePublisher;
+            _logger = logger;
         }
+
 
         //Tum basvurulari getir
         public async Task<List<LoanApplicationDto>> GetAllAsync()
@@ -73,9 +78,12 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
             _unitOfWork.GetWriteRepository<LoanApplication>().Update(application);
             await _unitOfWork.SaveAsync();
-
             
-            //SignalR
+            
+            _logger.LogInformation("Kredi başvurusu onaylandı. ApplicationId: {ApplicationId}, CustomerId: {CustomerId}", application.Id, application.CustomerId);
+
+
+       
             await _notificationService
                 .SendApplicationStatusChangedAsync(
                     application.CustomerId,
@@ -84,7 +92,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     application.DecisionNote
                 );
 
-            // RabbitMQ - E-posta bildirimi
+           
             await _messagePublisher.PublishAsync(
                 new LoanApplicationEmailMessage
                 {
@@ -96,7 +104,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             return MapToDto(application);
         }
 
-        //Basvuruyu Reddet
+     
         public async Task<LoanApplicationDto> RejectAsync(int applicationId, string? note)
         {
             var application = await GetApplicationWithDetailsAsync(applicationId);
@@ -122,9 +130,11 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             _unitOfWork.GetWriteRepository<LoanApplication>().Update(application);
             await _unitOfWork.SaveAsync();
 
+            _logger.LogInformation("Kredi başvurusu reddedildi. ApplicationId: {ApplicationId}, CustomerId: {CustomerId}", application.Id, application.CustomerId);
+
 
             //SignalR
-            await _notificationService
+         await _notificationService
                 .SendApplicationStatusChangedAsync(
                     application.CustomerId,
                     application.Id,
@@ -144,7 +154,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 
         }
 
-        //Bavuru ile ilgili iliskili bilgiler
+        
         private async Task<LoanApplication?> GetApplicationWithDetailsAsync(int applicationId)
         {
             return await _unitOfWork
@@ -158,8 +168,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 .FirstOrDefaultAsync(x => x.Id == applicationId);
                
         }
-    
-        //Map
         private static LoanApplicationDto MapToDto(LoanApplication application)
         {
             return new LoanApplicationDto

@@ -31,16 +31,14 @@ namespace internLoanProjectAPI.RabbitMQ.Email
             {
                 container.Page(page =>
                 {
-                    // ==================================
+                    
                     // SAYFA AYARLARI
-                    // ==================================
                     page.Size(PageSizes.A4);
                     page.Margin(25);
                     page.DefaultTextStyle(x => x.FontSize(9));
 
-                    // ==================================
+                 
                     // HEADER
-                    // ==================================
                     page.Header().Column(column =>
                     {
                         column.Item()
@@ -65,9 +63,8 @@ namespace internLoanProjectAPI.RabbitMQ.Email
                             .Bold();
                     });
 
-                    // ==================================
+                   
                     // CONTENT
-                    // ==================================
                     page.Content()
                         .PaddingVertical(20)
                         .Column(column =>
@@ -141,7 +138,7 @@ namespace internLoanProjectAPI.RabbitMQ.Email
                                         AddHeaderCell(header, "KKDF");
                                         AddHeaderCell(header, "BSMV");
                                         AddHeaderCell(header, "Anapara");
-                                        AddHeaderCell(header, "Kalan");
+                                        AddHeaderCell(header, "Kalan Anapara");
                                     });
 
                                     // ==================================

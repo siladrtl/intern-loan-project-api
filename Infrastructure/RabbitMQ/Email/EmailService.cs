@@ -50,10 +50,7 @@ namespace internLoanProjectAPI.RabbitMQ.Email
             };
 
             mailMessage.To.Add(to);
-
-            // ======================================
-            // PDF ATTACHMENT
-            // ======================================
+            //pdf attachment
             if (attachmentBytes != null && attachmentBytes.Length > 0)
             {
                 var stream = new MemoryStream(attachmentBytes);
