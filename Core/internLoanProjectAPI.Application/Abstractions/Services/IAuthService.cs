@@ -9,8 +9,7 @@ namespace internLoanProjectAPI.Application.Abstractions.Services
 {
     public interface IAuthService
     {
-        Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request);
-
+        Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request, VerificationDocumentDto verificationDocument);
         Task<AuthResponseDto> LoginAsync(LoginRequestDto request);
     }
 }

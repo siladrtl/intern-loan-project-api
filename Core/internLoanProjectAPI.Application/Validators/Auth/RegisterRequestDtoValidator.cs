@@ -14,9 +14,6 @@ namespace internLoanProjectAPI.Application.Validators.Auth
 
         public RegisterRequestDtoValidator()
         {
-            // ==========================================
-            // AD
-            // ==========================================
 
             RuleFor(x => x.FirstName)
                 .NotEmpty()
@@ -34,10 +31,6 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                 );
 
 
-            // ==========================================
-            // SOYAD
-            // ==========================================
-
             RuleFor(x => x.LastName)
                 .NotEmpty()
                 .WithMessage("Soyad alanı zorunludur.")
@@ -53,10 +46,6 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                     "Soyad yalnızca harflerden oluşmalıdır."
                 );
 
-
-            // ==========================================
-            // E-POSTA
-            // ==========================================
 
             RuleFor(x => x.Email)
                 .NotEmpty()
@@ -77,11 +66,6 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                     "Geçerli bir e-posta adresi giriniz."
                 );
 
-
-            // ==========================================
-            // TC KİMLİK NUMARASI
-            // ==========================================
-
             RuleFor(x => x.NationalId)
                 .NotEmpty()
                 .WithMessage(
@@ -94,10 +78,6 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                 );
 
 
-            // ==========================================
-            // TELEFON
-            // ==========================================
-
             RuleFor(x => x.PhoneNumber)
                 .NotEmpty()
                 .WithMessage(
@@ -109,10 +89,6 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                     "Telefon numarasını 5XXXXXXXXX formatında giriniz."
                 );
 
-
-            // ==========================================
-            // DOĞUM TARİHİ
-            // ==========================================
 
             RuleFor(x => x.BirthDate)
                 .NotEmpty()
@@ -129,11 +105,6 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                 .WithMessage(
                     "Kayıt olabilmek için en az 18 yaşında olmalısınız."
                 );
-
-
-            // ==========================================
-            // ŞEHİR
-            // ==========================================
 
             RuleFor(x => x.City)
                 .NotEmpty()
@@ -157,10 +128,6 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                 );
 
 
-            // ==========================================
-            // İLÇE
-            // ==========================================
-
             RuleFor(x => x.District)
                 .NotEmpty()
                 .WithMessage(
@@ -182,21 +149,11 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                     "İlçe yalnızca harflerden oluşmalıdır."
                 );
 
-
-            // ==========================================
-            // MÜŞTERİ TİPİ
-            // ==========================================
-
             RuleFor(x => x.CustomerType)
                 .IsInEnum()
                 .WithMessage(
                     "Geçerli bir müşteri tipi seçiniz."
                 );
-
-
-            // ==========================================
-            // ŞİFRE
-            // ==========================================
 
             RuleFor(x => x.Password)
                 .NotEmpty()
@@ -230,11 +187,6 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                 );
         }
 
-
-        // ==========================================
-        // GEÇERLİ DOĞUM TARİHİ
-        // ==========================================
-
         private static bool BeValidBirthDate(
             DateTime birthDate)
         {
@@ -246,11 +198,6 @@ namespace internLoanProjectAPI.Application.Validators.Auth
             return birthDate.Date <=
                    DateTime.Today;
         }
-
-
-        // ==========================================
-        // 18 YAŞ KONTROLÜ
-        // ==========================================
 
         private static bool BeAtLeast18YearsOld(
             DateTime birthDate)
@@ -264,10 +211,6 @@ namespace internLoanProjectAPI.Application.Validators.Auth
                    DateTime.Today.AddYears(-18);
         }
 
-
-        // ==========================================
-        // TC KİMLİK NUMARASI
-        // ==========================================
 
         private static bool BeValidTurkishIdentityNumber(
             string nationalId)

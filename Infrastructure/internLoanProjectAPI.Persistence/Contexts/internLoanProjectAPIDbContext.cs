@@ -16,11 +16,6 @@ namespace internLoanProjectAPI.Persistence.Contexts
         {
         }
 
-
-        // ==========================================
-        // DB SETS
-        // ==========================================
-
         public DbSet<Bank> Banks { get; set; }
 
         public DbSet<Customer> Customers { get; set; }
@@ -35,16 +30,13 @@ namespace internLoanProjectAPI.Persistence.Contexts
 
         public DbSet<PaymentPlan> PaymentPlans { get; set; }
 
+        public DbSet<CustomerVerificationDocument> VerificationDocuments {get; set;} 
+
 
         protected override void OnModelCreating(
             ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-
-
-            // ==========================================
-            // APP USER -> CUSTOMER
-            // ==========================================
 
             builder.Entity<AppUser>()
                 .HasOne(x => x.Customer)
@@ -52,19 +44,10 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .HasForeignKey<AppUser>(x => x.CustomerId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-
-            // ==========================================
-            // BANK
-            // ==========================================
-
             builder.Entity<Bank>()
                 .HasIndex(x => x.Name)
                 .IsUnique();
 
-
-            // ==========================================
-            // CUSTOMER
-            // ==========================================
 
             builder.Entity<Customer>()
                 .HasIndex(x => x.NationalId)
@@ -74,16 +57,21 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .HasIndex(x => x.Email)
                 .IsUnique();
 
-            // CustomerType artık enum.
-            // DB'de int olarak tutulacak.
             builder.Entity<Customer>()
                 .Property(x => x.CustomerType)
                 .HasConversion<int>();
 
+            builder.Entity<CustomerVerificationDocument>()
+                .HasOne(x => x.Customer)
+                .WithOne(x => x.VerificationDocument)
+                .HasForeignKey<CustomerVerificationDocument>(
+                 x => x.CustomerId)
+                 .OnDelete(DeleteBehavior.Cascade);
+           
+            builder.Entity<CustomerVerificationDocument>()
+            .Property(x => x.Status)
+            .HasConversion<int>();
 
-            // ==========================================
-            // LOAN TYPE
-            // ==========================================
 
             builder.Entity<LoanType>()
                 .HasIndex(x => x.Name)
@@ -96,11 +84,6 @@ namespace internLoanProjectAPI.Persistence.Contexts
             builder.Entity<LoanType>()
                 .Property(x => x.BsmvRate)
                 .HasPrecision(18, 2);
-
-
-            // ==========================================
-            // LOAN PRODUCT
-            // ==========================================
 
             builder.Entity<LoanProduct>()
                 .Property(x => x.InterestRate)
@@ -115,33 +98,22 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .HasPrecision(18, 2);
 
 
-            // CustomerType enum.
             builder.Entity<LoanProduct>()
                 .Property(x => x.CustomerType)
                 .HasConversion<int>();
-
-
-            // LoanProduct -> Bank
 
             builder.Entity<LoanProduct>()
                 .HasOne(x => x.Bank)
                 .WithMany(x => x.LoanProducts)
                 .HasForeignKey(x => x.BankId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-
-            // LoanProduct -> LoanType
-
+ 
             builder.Entity<LoanProduct>()
                 .HasOne(x => x.LoanType)
                 .WithMany(x => x.LoanProducts)
                 .HasForeignKey(x => x.LoanTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-            // ==========================================
-            // LOAN CALCULATION
-            // ==========================================
 
             builder.Entity<LoanCalculation>()
                 .Property(x => x.Amount)
@@ -171,19 +143,11 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .Property(x => x.TotalPayment)
                 .HasPrecision(18, 2);
 
-
-            // LoanCalculation -> LoanProduct
-
             builder.Entity<LoanCalculation>()
                 .HasOne(x => x.LoanProduct)
                 .WithMany(x => x.LoanCalculations)
                 .HasForeignKey(x => x.LoanProductId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-
-            // ==========================================
-            // PAYMENT PLAN
-            // ==========================================
 
             builder.Entity<PaymentPlan>()
                 .Property(x => x.InstallmentAmount)
@@ -210,20 +174,11 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .HasPrecision(18, 2);
 
 
-            // PaymentPlan -> LoanCalculation
-
             builder.Entity<PaymentPlan>()
                 .HasOne(x => x.LoanCalculation)
                 .WithMany(x => x.PaymentPlans)
                 .HasForeignKey(x => x.LoanCalculationId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-
-            // ==========================================
-            // LOAN APPLICATION
-            // ==========================================
-
-            // LoanApplication -> Customer
 
             builder.Entity<LoanApplication>()
                 .HasOne(x => x.Customer)
@@ -231,18 +186,11 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .HasForeignKey(x => x.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-            // LoanApplication -> LoanProduct
-
             builder.Entity<LoanApplication>()
                 .HasOne(x => x.LoanProduct)
                 .WithMany(x => x.LoanApplications)
                 .HasForeignKey(x => x.LoanProductId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-
-            // LoanApplication -> LoanCalculation
-            // 1 hesaplama -> en fazla 1 başvuru
 
             builder.Entity<LoanApplication>()
                 .HasOne(x => x.LoanCalculation)
@@ -250,11 +198,6 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .HasForeignKey<LoanApplication>(
                     x => x.LoanCalculationId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-
-            // ==========================================
-            // BANK SEED
-            // ==========================================
 
             builder.Entity<Bank>().HasData(
 

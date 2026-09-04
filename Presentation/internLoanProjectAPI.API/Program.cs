@@ -1,6 +1,8 @@
 using FluentValidation;
 using internLoanProject.Domain.Entities.Identity;
 using internLoanProjectAPI.API.Middleware;
+using internLoanProjectAPI.API.Models;
+using internLoanProjectAPI.API.Validators;
 using internLoanProjectAPI.Application.Validators.Auth;
 using internLoanProjectAPI.Persistence;
 using internLoanProjectAPI.Persistence.Contexts;
@@ -206,6 +208,8 @@ builder.Services
 
 
 // APPLICATION BUILD
+
+builder.Services.AddScoped<IValidator<RegisterFormRequest>, RegisterFormRequestValidator>();
 
 
 var app = builder.Build();
