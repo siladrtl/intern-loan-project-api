@@ -28,5 +28,6 @@ namespace internLoanProjectAPI.Application.DTOs.Auth
         public CustomerType CustomerType { get; set; }
 
         public string Password { get; set; }
+     
     }
 }
