@@ -11,16 +11,10 @@ namespace internLoanProjectAPI.API.Controllers
     {
         private readonly ILoanProductService _loanProductService;
 
-        public LoanProductsController(
-            ILoanProductService loanProductService)
+        public LoanProductsController(ILoanProductService loanProductService)
         {
             _loanProductService = loanProductService;
         }
-
-
-        // ==========================================
-        // TÜM AKTİF ÜRÜNLER
-        // ==========================================
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -30,11 +24,6 @@ namespace internLoanProjectAPI.API.Controllers
 
             return Ok(result);
         }
-
-
-        // ==========================================
-        // KREDİ TÜRÜ + MÜŞTERİ TİPİ
-        // ==========================================
 
         [HttpGet("by-loan-type")]
         public async Task<IActionResult> GetByLoanType(
@@ -50,11 +39,6 @@ namespace internLoanProjectAPI.API.Controllers
             return Ok(result);
         }
 
-
-        // ==========================================
-        // ÜRÜN ARAMA
-        // ==========================================
-
         [HttpPost("Search")]
         public async Task<IActionResult> Search(
             [FromBody] ProductSearchRequestDto dto)
@@ -65,11 +49,6 @@ namespace internLoanProjectAPI.API.Controllers
 
             return Ok(result);
         }
-
-
-        // ==========================================
-        // ADMIN - ÜRÜN EKLE
-        // ==========================================
 
         [HttpPost("create-loan-product")]
         public async Task<IActionResult> Add(
@@ -88,11 +67,6 @@ namespace internLoanProjectAPI.API.Controllers
                 "Kredi ürünü başarılı şekilde oluşturuldu.");
         }
 
-
-        // ==========================================
-        // ADMIN - ÜRÜN GÜNCELLE
-        // ==========================================
-
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(
             int id,
@@ -110,11 +84,6 @@ namespace internLoanProjectAPI.API.Controllers
             return Ok(
                 "Kredi ürünü başarılı şekilde güncellendi.");
         }
-
-
-        // ==========================================
-        // ADMIN - ÜRÜN PASİFLEŞTİR
-        // ==========================================
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(

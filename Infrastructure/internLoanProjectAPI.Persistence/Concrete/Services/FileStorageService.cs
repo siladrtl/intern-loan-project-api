@@ -28,6 +28,15 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
             return filePath;
         }
+        public Task DeleteAsync(string filePath)
+        {
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+
+            return Task.CompletedTask;
+        }
     }
 }
 

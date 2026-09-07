@@ -21,4 +21,8 @@
     <ProjectReference Include="..\..\Infrastructure\RabbitMQ\internLoanProjectAPI.RabbitMQ.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Storage\VerificationDocuments\" />
+  </ItemGroup>
+
 </Project>

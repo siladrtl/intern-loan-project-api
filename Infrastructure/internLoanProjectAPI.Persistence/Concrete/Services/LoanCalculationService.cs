@@ -19,10 +19,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
         public async Task<LoanCalculationDto> CalculateAsync(
             CreateLoanCalculationDto dto)
         {
-            // ==========================================
-            // LOAN PRODUCT
-            // ==========================================
-
+       
             var loanProduct = await _unitOfWork
                 .GetReadRepository<LoanProduct>()
                 .GetSingleAsync(
@@ -38,12 +35,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     "Kredi ürünü bulunamadı.");
             }
 
-
-            // ==========================================
-            // LOAN TYPE
-            // KKDF / BSMV oranlarını buradan alıyoruz
-            // ==========================================
-
             var loanType = await _unitOfWork
                 .GetReadRepository<LoanType>()
                 .GetSingleAsync(
@@ -58,10 +49,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             }
 
 
-            // ==========================================
-            // TUTAR KONTROLÜ
-            // ==========================================
-
             if (dto.Amount < loanProduct.MinAmount ||
                 dto.Amount > loanProduct.MaxAmount)
             {
@@ -70,22 +57,12 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             }
 
 
-            // ==========================================
-            // VADE KONTROLÜ
-            // ==========================================
-
             if (dto.Term < loanProduct.MinTerm ||
                 dto.Term > loanProduct.MaxTerm)
             {
                 throw new Exception(
                     "Kredi vadesi ürün için geçerli aralığın dışındadır.");
             }
-
-
-            // ==========================================
-            // ORANLAR
-            // ==========================================
-
             decimal monthlyInterestRate =
                 loanProduct.InterestRate / 100m;
 
@@ -95,18 +72,10 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             decimal bsmvRate =
                 loanType.BsmvRate / 100m;
 
-
-            // Faizin üzerine KKDF ve BSMV uygulandığı için
-            // efektif aylık maliyet oranını oluşturuyoruz.
-
             decimal effectiveMonthlyRate =
                 monthlyInterestRate *
                 (1 + kkdfRate + bsmvRate);
 
-
-            // ==========================================
-            // AYLIK TAKSİT
-            // ==========================================
 
             decimal monthlyInstallment;
 
@@ -138,17 +107,10 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     monthlyInstallment,
                     2);
 
-
-            // ==========================================
-            // LOAN CALCULATION
-            // ==========================================
-
             var calculation =
                 new LoanCalculation
                 {
-                    // Id vermiyoruz.
-                    // DB int Id'yi otomatik oluşturacak.
-
+    
                     LoanProductId =
                         loanProduct.Id,
 
@@ -168,11 +130,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                         new List<PaymentPlan>()
                 };
 
-
-            // ==========================================
-            // ÖDEME PLANI
-            // ==========================================
-
             decimal remainingPrincipal =
                 dto.Amount;
 
@@ -187,10 +144,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
             for (int i = 1; i <= dto.Term; i++)
             {
-                // --------------------------------------
-                // FAİZ
-                // --------------------------------------
-
+   
                 decimal interestAmount =
                     Math.Round(
                         remainingPrincipal *
@@ -198,20 +152,11 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                         2);
 
 
-                // --------------------------------------
-                // KKDF
-                // --------------------------------------
-
                 decimal kkdfAmount =
                     Math.Round(
                         interestAmount *
                         kkdfRate,
                         2);
-
-
-                // --------------------------------------
-                // BSMV
-                // --------------------------------------
 
                 decimal bsmvAmount =
                     Math.Round(
@@ -219,10 +164,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                         bsmvRate,
                         2);
 
-
-                // --------------------------------------
-                // ANAPARA
-                // --------------------------------------
 
                 decimal principalAmount =
                     monthlyInstallment
@@ -236,8 +177,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                         principalAmount,
                         2);
 
-
-                // Son taksitte yuvarlama farkını düzelt
                 if (i == dto.Term)
                 {
                     principalAmount =
@@ -263,11 +202,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     remainingPrincipal = 0;
                 }
 
-
-                // --------------------------------------
-                // TOPLAMLAR
-                // --------------------------------------
-
                 totalInterest +=
                     interestAmount;
 
@@ -281,16 +215,11 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     monthlyInstallment;
 
 
-                // --------------------------------------
-                // PAYMENT PLAN
-                // --------------------------------------
-
                 calculation.PaymentPlans.Add(
                     new PaymentPlan
                     {
-                        // Id vermiyoruz.
-                        // DB otomatik oluşturacak.
-
+                  
+                      
                         InstallmentNumber =
                             i,
 
@@ -345,21 +274,12 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     2);
 
 
-            // ==========================================
-            // DATABASE
-            // ==========================================
-
             await _unitOfWork
                 .GetWriteRepository<LoanCalculation>()
                 .AddAsync(calculation);
 
 
             await _unitOfWork.SaveAsync();
-
-
-            // ==========================================
-            // RESPONSE
-            // ==========================================
 
             return new LoanCalculationDto
             {
