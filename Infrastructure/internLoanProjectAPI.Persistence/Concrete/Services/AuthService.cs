@@ -31,11 +31,13 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             _fileStorageService = fileStorageService;
         }
 
-        public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request,VerificationDocumentDto verificationDocument)
+        public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request, VerificationDocumentDto verificationDocument)
         {
-            var email = request.Email.Trim();var nationalId = request.NationalId.Trim();
-     
+            var email = request.Email.Trim();
+            var nationalId = request.NationalId.Trim();
+
             var existingUser = await _userManager.FindByEmailAsync(email);
+
             if (existingUser != null)
             {
                 throw new Exception("Bu e-posta adresi zaten kayıtlı.");
@@ -43,14 +45,20 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
             var existingCustomer = await _unitOfWork
                 .GetReadRepository<Customer>()
-                .GetSingleAsync(x => x.NationalId == nationalId, false);
+                .GetSingleAsync(
+                    x => x.NationalId == nationalId,
+                    false
+                );
 
             if (existingCustomer != null)
             {
-                throw new Exception("Bu TC Kimlik Numarası ile daha önce kayıt oluşturulmuş.");
+                throw new Exception(
+                    "Bu TC Kimlik Numarası ile daha önce kayıt oluşturulmuş.");
             }
 
             await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            string? savedFilePath = null;
 
             try
             {
@@ -73,12 +81,14 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
                 if (!customerResult)
                 {
-                    throw new Exception("Müşteri kaydı oluşturulamadı.");
+                    throw new Exception(
+                        "Müşteri kaydı oluşturulamadı."
+                    );
                 }
 
                 await _unitOfWork.SaveAsync();
 
-                var filePath = await _fileStorageService.SaveAsync(
+                savedFilePath = await _fileStorageService.SaveAsync(
                     verificationDocument.FileStream,
                     verificationDocument.FileName,
                     verificationDocument.ContentType
@@ -88,19 +98,32 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     new CustomerVerificationDocument
                     {
                         CustomerId = customer.Id,
-                        OriginalFileName = verificationDocument.FileName,
-                        StoredFileName = Path.GetFileName(filePath),
-                        ContentType = verificationDocument.ContentType,
-                        FileSize = verificationDocument.FileSize,
-                        FilePath = filePath,
-                        Status = VerificationStatus.Pending,
-                        UploadedAt = DateTime.Now
 
+                        OriginalFileName =
+                            verificationDocument.FileName,
+
+                        StoredFileName =
+                            Path.GetFileName(savedFilePath),
+
+                        ContentType =
+                            verificationDocument.ContentType,
+
+                        FileSize =
+                            verificationDocument.FileSize,
+
+                        FilePath =
+                            savedFilePath,
+
+                        Status =
+                            VerificationStatus.Pending,
+
+                        UploadedAt =
+                            DateTime.Now
                     };
 
                 var documentResult = await _unitOfWork
-                        .GetWriteRepository<CustomerVerificationDocument>()
-                        .AddAsync(verificationDocumentEntity);
+                    .GetWriteRepository<CustomerVerificationDocument>()
+                    .AddAsync(verificationDocumentEntity);
 
                 if (!documentResult)
                 {
@@ -118,25 +141,44 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     CustomerId = customer.Id
                 };
 
-                var identityResult = await _userManager.CreateAsync(user, request.Password);
+                var identityResult =
+                    await _userManager.CreateAsync(
+                        user,
+                        request.Password
+                    );
 
                 if (!identityResult.Succeeded)
                 {
-                    var errors = string.Join(", ", identityResult.Errors.Select(x => x.Description));
+                    var errors = string.Join(
+                        ", ",
+                        identityResult.Errors
+                            .Select(x => x.Description)
+                    );
+
                     throw new Exception(errors);
                 }
 
-                var roleResult = await _userManager.AddToRoleAsync(user, "Customer");
+                var roleResult =
+                    await _userManager.AddToRoleAsync(
+                        user,
+                        "Customer"
+                    );
 
                 if (!roleResult.Succeeded)
                 {
-                    var errors = string.Join(", ", roleResult.Errors.Select(x => x.Description));
+                    var errors = string.Join(
+                        ", ",
+                        roleResult.Errors
+                            .Select(x => x.Description)
+                    );
+
                     throw new Exception(errors);
                 }
 
                 await transaction.CommitAsync();
 
-                var token = await GenerateTokenAsync(user);
+                var token =
+                    await GenerateTokenAsync(user);
 
                 return new AuthResponseDto
                 {
@@ -148,6 +190,13 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             catch
             {
                 await transaction.RollbackAsync();
+
+                if (!string.IsNullOrWhiteSpace(savedFilePath))
+                {
+                    await _fileStorageService
+                        .DeleteAsync(savedFilePath);
+                }
+
                 throw;
             }
         }

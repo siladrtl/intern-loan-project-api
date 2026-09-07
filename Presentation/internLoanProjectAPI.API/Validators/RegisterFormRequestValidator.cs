@@ -18,14 +18,14 @@ namespace internLoanProjectAPI.API.Validators
 
         public RegisterFormRequestValidator()
         {
-            // Belge zorunlu
+        
             RuleFor(x => x.VerificationDocument)
                 .NotNull()
                 .WithMessage(
                     "Müşteri tipinizi doğrulamak için belge yüklemelisiniz."
                 );
 
-            // Belge boş olmamalı
+            
             RuleFor(x => x.VerificationDocument)
                 .Must(file => file != null && file.Length > 0)
                 .WithMessage(
@@ -33,7 +33,7 @@ namespace internLoanProjectAPI.API.Validators
                 )
                 .When(x => x.VerificationDocument != null);
 
-            // Dosya uzantısı kontrolü
+            
             RuleFor(x => x.VerificationDocument)
                 .Must(file =>
                 {
@@ -51,7 +51,7 @@ namespace internLoanProjectAPI.API.Validators
                 )
                 .When(x => x.VerificationDocument != null);
 
-            // Maksimum dosya boyutu kontrolü
+            
             RuleFor(x => x.VerificationDocument)
                 .Must(file =>
                     file != null &&
