@@ -1,11 +1,12 @@
 ﻿using internLoanProjectAPI.Application.Abstractions.Services;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace internLoanProjectAPI.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class AdminCustomerVerificationController : ControllerBase
     {
         private readonly IAdminCustomerVerificationService _verificationService;
@@ -20,8 +21,39 @@ namespace internLoanProjectAPI.API.Controllers
         public async Task<IActionResult> GetAll()
         {
             var result = await _verificationService.GetAllAsync();
-
             return Ok(result);
+        }
+
+        [HttpGet("{id}/document")]
+        public async Task<IActionResult> GetDocument(int id)
+        {
+            try
+            {
+                var document = await _verificationService.GetDocumentAsync(id);
+
+                if (!System.IO.File.Exists(document.FilePath))
+                {
+                    return NotFound(new
+                    {
+                        message = "Belge dosyası sunucuda bulunamadı."
+                    });
+                }
+
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(document.FilePath);
+
+                return File(
+                    fileBytes,
+                    document.ContentType,
+                    document.OriginalFileName
+                );
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
         }
 
         [HttpPut("{id}/approve")]
@@ -31,14 +63,26 @@ namespace internLoanProjectAPI.API.Controllers
         {
             try
             {
-                var result = await _verificationService
-                    .ApproveAsync(id, note);
-
+                var result = await _verificationService.ApproveAsync(id, note);
                 return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return StatusCode(500, new
                 {
                     message = ex.Message
                 });
@@ -52,14 +96,26 @@ namespace internLoanProjectAPI.API.Controllers
         {
             try
             {
-                var result = await _verificationService
-                    .RejectAsync(id, note);
-
+                var result = await _verificationService.RejectAsync(id, note);
                 return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
             catch (Exception ex)
             {
-                return BadRequest(new
+                return StatusCode(500, new
                 {
                     message = ex.Message
                 });
@@ -67,6 +123,3 @@ namespace internLoanProjectAPI.API.Controllers
         }
     }
 }
-
-
-

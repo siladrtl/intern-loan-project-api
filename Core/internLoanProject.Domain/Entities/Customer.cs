@@ -25,11 +25,10 @@ namespace internLoanProject.Domain.Entities
         public string City { get; set; }
 
         public string District { get; set; }
-
+        public DateTime CustomerSince { get; set; } 
         public CustomerType CustomerType { get; set; }
 
         public ICollection<LoanApplication> LoanApplications { get; set; }
 
-        public CustomerVerificationDocument? VerificationDocument { get; set; }
     }
 }

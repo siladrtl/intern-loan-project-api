@@ -31,38 +31,43 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             _fileStorageService = fileStorageService;
         }
 
-        public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request, VerificationDocumentDto verificationDocument)
+        public async Task<AuthResponseDto> RegisterAsync(
+            RegisterRequestDto request,
+            VerificationDocumentDto verificationDocument)
         {
             var email = request.Email.Trim();
             var nationalId = request.NationalId.Trim();
 
             var existingUser = await _userManager.FindByEmailAsync(email);
-
             if (existingUser != null)
             {
-                throw new Exception("Bu e-posta adresi zaten kayıtlı.");
+                throw new InvalidOperationException("Bu e-posta adresi zaten kayıtlı.");
             }
 
             var existingCustomer = await _unitOfWork
                 .GetReadRepository<Customer>()
-                .GetSingleAsync(
-                    x => x.NationalId == nationalId,
-                    false
-                );
+                .GetSingleAsync(x => x.NationalId == nationalId, false);
 
             if (existingCustomer != null)
             {
-                throw new Exception(
-                    "Bu TC Kimlik Numarası ile daha önce kayıt oluşturulmuş.");
+                throw new InvalidOperationException("Bu TC Kimlik Numarası ile daha önce müşteri kaydı oluşturulmuş.");
+            }
+
+            var existingRegistration = await _unitOfWork
+                .GetReadRepository<CustomerRegistration>()
+                .GetSingleAsync(x => x.NationalId == nationalId || x.Email == email, false);
+
+            if (existingRegistration != null)
+            {
+                throw new InvalidOperationException("Bu bilgilerle daha önce müşteri olma başvurusu oluşturulmuş.");
             }
 
             await using var transaction = await _context.Database.BeginTransactionAsync();
-
             string? savedFilePath = null;
 
             try
             {
-                var customer = new Customer
+                var registration = new CustomerRegistration
                 {
                     FirstName = request.FirstName.Trim(),
                     LastName = request.LastName.Trim(),
@@ -72,18 +77,18 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     PhoneNumber = request.PhoneNumber.Trim(),
                     City = request.City.Trim(),
                     District = request.District.Trim(),
-                    CustomerType = request.CustomerType
+                    CustomerType = request.CustomerType,
+                    Status = VerificationStatus.Pending,
+                    CreatedAt = DateTime.Now
                 };
 
-                var customerResult = await _unitOfWork
-                    .GetWriteRepository<Customer>()
-                    .AddAsync(customer);
+                var registrationResult = await _unitOfWork
+                    .GetWriteRepository<CustomerRegistration>()
+                    .AddAsync(registration);
 
-                if (!customerResult)
+                if (!registrationResult)
                 {
-                    throw new Exception(
-                        "Müşteri kaydı oluşturulamadı."
-                    );
+                    throw new InvalidOperationException("Müşteri olma başvurusu oluşturulamadı.");
                 }
 
                 await _unitOfWork.SaveAsync();
@@ -91,35 +96,19 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 savedFilePath = await _fileStorageService.SaveAsync(
                     verificationDocument.FileStream,
                     verificationDocument.FileName,
-                    verificationDocument.ContentType
-                );
+                    verificationDocument.ContentType);
 
-                var verificationDocumentEntity =
-                    new CustomerVerificationDocument
-                    {
-                        CustomerId = customer.Id,
-
-                        OriginalFileName =
-                            verificationDocument.FileName,
-
-                        StoredFileName =
-                            Path.GetFileName(savedFilePath),
-
-                        ContentType =
-                            verificationDocument.ContentType,
-
-                        FileSize =
-                            verificationDocument.FileSize,
-
-                        FilePath =
-                            savedFilePath,
-
-                        Status =
-                            VerificationStatus.Pending,
-
-                        UploadedAt =
-                            DateTime.Now
-                    };
+                var verificationDocumentEntity = new CustomerVerificationDocument
+                {
+                    CustomerRegistrationId = registration.Id,
+                    OriginalFileName = verificationDocument.FileName,
+                    StoredFileName = Path.GetFileName(savedFilePath),
+                    ContentType = verificationDocument.ContentType,
+                    FileSize = verificationDocument.FileSize,
+                    FilePath = savedFilePath,
+                    Status = VerificationStatus.Pending,
+                    UploadedAt = DateTime.Now
+                };
 
                 var documentResult = await _unitOfWork
                     .GetWriteRepository<CustomerVerificationDocument>()
@@ -127,9 +116,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
                 if (!documentResult)
                 {
-                    throw new Exception(
-                        "Müşteri doğrulama belgesi kaydedilemedi."
-                    );
+                    throw new InvalidOperationException("Müşteri doğrulama belgesi kaydedilemedi.");
                 }
 
                 await _unitOfWork.SaveAsync();
@@ -138,53 +125,24 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 {
                     UserName = email,
                     Email = email,
-                    CustomerId = customer.Id
+                    CustomerId = null
                 };
 
-                var identityResult =
-                    await _userManager.CreateAsync(
-                        user,
-                        request.Password
-                    );
+                var identityResult = await _userManager.CreateAsync(user, request.Password);
 
                 if (!identityResult.Succeeded)
                 {
-                    var errors = string.Join(
-                        ", ",
-                        identityResult.Errors
-                            .Select(x => x.Description)
-                    );
-
-                    throw new Exception(errors);
-                }
-
-                var roleResult =
-                    await _userManager.AddToRoleAsync(
-                        user,
-                        "Customer"
-                    );
-
-                if (!roleResult.Succeeded)
-                {
-                    var errors = string.Join(
-                        ", ",
-                        roleResult.Errors
-                            .Select(x => x.Description)
-                    );
-
-                    throw new Exception(errors);
+                    var errors = string.Join(", ", identityResult.Errors.Select(x => x.Description));
+                    throw new InvalidOperationException(errors);
                 }
 
                 await transaction.CommitAsync();
 
-                var token =
-                    await GenerateTokenAsync(user);
-
                 return new AuthResponseDto
                 {
-                    Token = token,
+                    Token = string.Empty,
                     Email = user.Email!,
-                    CustomerId = customer.Id
+                    CustomerId = null
                 };
             }
             catch
@@ -193,8 +151,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
                 if (!string.IsNullOrWhiteSpace(savedFilePath))
                 {
-                    await _fileStorageService
-                        .DeleteAsync(savedFilePath);
+                    await _fileStorageService.DeleteAsync(savedFilePath);
                 }
 
                 throw;
@@ -209,21 +166,70 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
             if (user == null)
             {
-                throw new Exception("Email veya şifre hatalı.");
+                throw new UnauthorizedAccessException(
+                    "Email veya şifre hatalı."
+                );
             }
 
-            var passwordValid = await _userManager.CheckPasswordAsync(user, request.Password);
+            var passwordValid = await _userManager
+                .CheckPasswordAsync(user, request.Password);
 
             if (!passwordValid)
             {
-                throw new Exception("Email veya şifre hatalı.");
+                throw new UnauthorizedAccessException(
+                    "Email veya şifre hatalı."
+                );
             }
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            if (roles.Contains("Customer") && user.CustomerId == null)
+            if (roles.Contains("Admin"))
             {
-                throw new Exception("Kullanıcıya bağlı müşteri kaydı bulunamadı.");
+                var adminToken = await GenerateTokenAsync(user);
+
+                return new AuthResponseDto
+                {
+                    Token = adminToken,
+                    Email = user.Email!,
+                    CustomerId = null
+                };
+            }
+
+            if (user.CustomerId == null)
+            {
+                var registration = await _unitOfWork
+                    .GetReadRepository<CustomerRegistration>()
+                    .GetSingleAsync(
+                        x => x.Email == email,
+                        false
+                    );
+
+                if (registration != null)
+                {
+                    if (registration.Status == VerificationStatus.Pending)
+                    {
+                        throw new InvalidOperationException(
+                            "Müşteri olma başvurunuz henüz admin tarafından onaylanmadı."
+                        );
+                    }
+
+                    if (registration.Status == VerificationStatus.Rejected)
+                    {
+                        throw new InvalidOperationException(
+                            "Müşteri olma başvurunuz reddedildi."
+                        );
+                    }
+                }
+
+                throw new InvalidOperationException(
+                    "Kullanıcıya bağlı müşteri kaydı bulunamadı."
+                );
+            }
+            if (!roles.Contains("Customer"))
+            {
+                throw new InvalidOperationException(
+                    "Kullanıcının müşteri yetkisi bulunamadı."
+                );
             }
 
             var token = await GenerateTokenAsync(user);
@@ -235,7 +241,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 CustomerId = user.CustomerId
             };
         }
-
         private async Task<string> GenerateTokenAsync(AppUser user)
         {
             var claims = new List<Claim>
@@ -260,7 +265,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             }
 
             var roles = await _userManager.GetRolesAsync(user);
-
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
@@ -269,7 +273,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             var jwtKey = _configuration["Jwt:Key"];
             if (string.IsNullOrWhiteSpace(jwtKey))
             {
-                throw new Exception("Jwt:Key appsettings.json içerisinde bulunamadı.");
+                throw new InvalidOperationException("Jwt:Key appsettings.json içerisinde bulunamadı.");
             }
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
@@ -278,8 +282,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             var token = new JwtSecurityToken(
                 claims: claims,
                 expires: DateTime.Now.AddMinutes(30),
-                signingCredentials: credentials
-            );
+                signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
