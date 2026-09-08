@@ -10,9 +10,9 @@ namespace internLoanProject.Domain.Entities
 {
     public class CustomerVerificationDocument: BaseEntity
     {
-        public int CustomerId { get; set; }
+        public int CustomerRegistrationId { get; set; }
 
-        public Customer Customer { get; set; } = null!;
+        public CustomerRegistration CustomerRegistration { get; set; } = null!;
 
         public string OriginalFileName { get; set; } = null!;
 

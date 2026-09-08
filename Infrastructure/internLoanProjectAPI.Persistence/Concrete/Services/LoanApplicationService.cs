@@ -1,33 +1,28 @@
 ﻿using internLoanProject.Domain.Entities;
 using internLoanProject.Domain.Entities.Enums;
-
 using internLoanProjectAPI.Application.Abstractions.Services;
 using internLoanProjectAPI.Application.Abstractions.UnitOfWorks;
 using internLoanProjectAPI.Application.DTOs.Application;
-
 using internLoanProjectAPI.Persistence.Contexts;
-
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-
 using System.Security.Claims;
 
 namespace internLoanProjectAPI.Persistence.Concrete.Services
 {
-    public class LoanApplicationService: ILoanApplicationService
+    public class LoanApplicationService : ILoanApplicationService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly internLoanProjectAPIDbContext _context;
 
-        public LoanApplicationService(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor,internLoanProjectAPIDbContext context)
+        public LoanApplicationService(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, internLoanProjectAPIDbContext context)
         {
             _unitOfWork = unitOfWork;
             _httpContextAccessor = httpContextAccessor;
             _context = context;
         }
 
-        // Başvuru oluştur
         public async Task<LoanApplicationDto> CreateAsync(CreateLoanApplicationDto dto)
         {
             var userIdClaim = _httpContextAccessor
@@ -37,447 +32,223 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
             if (userIdClaim == null)
             {
-                throw new Exception(
-                    "Kullanıcı kimliği bulunamadı."
-                );
+                throw new Exception("Kullanıcı kimliği bulunamadı.");
             }
 
-            if (!Guid.TryParse(
-                userIdClaim.Value,
-                out Guid userId))
+            if (!Guid.TryParse(userIdClaim.Value, out Guid userId))
             {
-                throw new Exception(
-                    "Geçersiz kullanıcı kimliği."
-                );
+                throw new Exception("Geçersiz kullanıcı kimliği.");
             }
 
-            // AppUser bul
-            var user = await _context.Users
-                .FindAsync(userId);
+            var user = await _context.Users.FindAsync(userId);
 
             if (user == null)
             {
-                throw new Exception(
-                    "Kullanıcı bulunamadı."
-                );
+                throw new Exception("Kullanıcı bulunamadı.");
             }
 
             if (user.CustomerId == null)
             {
-                throw new Exception(
-                    "Kullanıcıya bağlı müşteri kaydı bulunamadı."
-                );
+                throw new Exception("Kullanıcıya bağlı müşteri kaydı bulunamadı.");
             }
 
             var customerId = user.CustomerId.Value;
 
-            // Customer bul
             var customer = await _unitOfWork
                 .GetReadRepository<Customer>()
-                .GetSingleAsync(
-                    x => x.Id == customerId,
-                    false
-                );
+                .GetSingleAsync(x => x.Id == customerId, false);
 
             if (customer == null)
             {
-                throw new Exception(
-                    "Müşteri kaydı bulunamadı."
-                );
+                throw new Exception("Müşteri kaydı bulunamadı.");
             }
 
-            // Müşteri doğrulama belgesi kontrolü
-            var verificationDocument = await _unitOfWork
-                .GetReadRepository<CustomerVerificationDocument>()
-                .GetSingleAsync(
-                    x => x.CustomerId == customerId,
-                    false
-                );
-
-            if (verificationDocument == null)
-            {
-                throw new Exception(
-                    "Müşteri doğrulama belgesi bulunamadı."
-                );
-            }
-
-            if (verificationDocument.Status ==
-                VerificationStatus.Pending)
-            {
-                throw new Exception(
-                    "Müşteri doğrulamanız henüz onaylanmadı."
-                );
-            }
-
-            if (verificationDocument.Status ==
-                VerificationStatus.Rejected)
-            {
-                throw new Exception(
-                    "Müşteri doğrulamanız reddedildi."
-                );
-            }
-
-            // Kredi ürünü + banka
             var loanProduct = await _unitOfWork
                 .GetReadRepository<LoanProduct>()
                 .GetAll(false)
                 .Include(x => x.Bank)
-                .FirstOrDefaultAsync(
-                    x =>
-                        x.Id == dto.LoanProductId &&
-                        x.IsActive
-                );
+                .FirstOrDefaultAsync(x => x.Id == dto.LoanProductId && x.IsActive);
 
             if (loanProduct == null)
             {
-                throw new Exception(
-                    "Aktif kredi ürünü bulunamadı."
-                );
+                throw new Exception("Aktif kredi ürünü bulunamadı.");
             }
 
-            // Müşteri tipi uygun mu?
-            if (loanProduct.CustomerType !=
-                customer.CustomerType)
+            if (loanProduct.CustomerType != customer.CustomerType)
             {
-                throw new Exception(
-                    "Seçilen kredi ürünü müşteri tipinize uygun değildir."
-                );
+                throw new Exception("Seçilen kredi ürünü müşteri tipinize uygun değildir.");
             }
 
-            // Kredi hesaplamasını bul
             var calculation = await _unitOfWork
                 .GetReadRepository<LoanCalculation>()
-                .GetSingleAsync(
-                    x =>
-                        x.Id == dto.LoanCalculationId,
-                    false
-                );
+                .GetSingleAsync(x => x.Id == dto.LoanCalculationId, false);
 
             if (calculation == null)
             {
-                throw new Exception(
-                    "Kredi hesaplaması bulunamadı."
-                );
+                throw new Exception("Kredi hesaplaması bulunamadı.");
             }
 
-            if (calculation.LoanProductId !=
-                dto.LoanProductId)
+            if (calculation.LoanProductId != dto.LoanProductId)
             {
-                throw new Exception(
-                    "Kredi hesaplaması seçilen ürünle eşleşmiyor."
-                );
+                throw new Exception("Kredi hesaplaması seçilen ürünle eşleşmiyor.");
             }
 
-            // Kredi başvurusu oluştur
             var application = new LoanApplication
             {
                 CustomerId = customerId,
-
                 LoanProductId = dto.LoanProductId,
-
-                LoanCalculationId =
-                    dto.LoanCalculationId,
-
-                Status =
-                    LoanApplicationStatus.Pending,
-
-                ApplicationDate =
-                    DateTime.Now,
-
-                DecisionDate =
-                    null,
-
-                DecisionNote =
-                    null
+                LoanCalculationId = dto.LoanCalculationId,
+                Status = LoanApplicationStatus.Pending,
+                ApplicationDate = DateTime.Now,
+                DecisionDate = null,
+                DecisionNote = null
             };
 
-            // Database'e ekle
             var result = await _unitOfWork
                 .GetWriteRepository<LoanApplication>()
                 .AddAsync(application);
 
             if (!result)
             {
-                throw new Exception(
-                    "Kredi başvurusu oluşturulamadı."
-                );
+                throw new Exception("Kredi başvurusu oluşturulamadı.");
             }
 
             await _unitOfWork.SaveAsync();
 
-            // Response
             return new LoanApplicationDto
             {
                 Id = application.Id,
-
-                CustomerId =
-                    application.CustomerId,
-
-                CustomerName =
-                    $"{customer.FirstName} {customer.LastName}",
-
-                LoanProductId =
-                    application.LoanProductId,
-
-                LoanProductName =
-                    loanProduct.Name,
-
-                BankName =
-                    loanProduct.Bank.Name,
-
-                LoanCalculationId =
-                    application.LoanCalculationId,
-
-                Amount =
-                    calculation.Amount,
-
-                Term =
-                    calculation.Term,
-
-                MonthlyInstallment =
-                    calculation.MonthlyInstallment,
-
-                Status =
-                    application.Status,
-
-                ApplicationDate =
-                    application.ApplicationDate,
-
-                DecisionDate =
-                    application.DecisionDate,
-
-                DecisionNote =
-                    application.DecisionNote
+                CustomerId = application.CustomerId,
+                CustomerName = $"{customer.FirstName} {customer.LastName}",
+                LoanProductId = application.LoanProductId,
+                LoanProductName = loanProduct.Name,
+                BankName = loanProduct.Bank.Name,
+                LoanCalculationId = application.LoanCalculationId,
+                Amount = calculation.Amount,
+                Term = calculation.Term,
+                MonthlyInstallment = calculation.MonthlyInstallment,
+                Status = application.Status,
+                ApplicationDate = application.ApplicationDate,
+                DecisionDate = application.DecisionDate,
+                DecisionNote = application.DecisionNote
             };
         }
 
-        // Müşteri kredi ürününe uygun mu?
-        public async Task<bool> CheckEligibilityAsync(
-            int loanProductId)
+        public async Task<bool> CheckEligibilityAsync(int loanProductId)
         {
-            // JWT User Id
             var userIdClaim = _httpContextAccessor
                 .HttpContext?
                 .User
-                .FindFirst(
-                    ClaimTypes.NameIdentifier
-                );
+                .FindFirst(ClaimTypes.NameIdentifier);
 
             if (userIdClaim == null)
             {
-                throw new Exception(
-                    "Kullanıcı kimliği bulunamadı."
-                );
+                throw new Exception("Kullanıcı kimliği bulunamadı.");
             }
 
-            if (!Guid.TryParse(
-                userIdClaim.Value,
-                out Guid userId))
+            if (!Guid.TryParse(userIdClaim.Value, out Guid userId))
             {
-                throw new Exception(
-                    "Geçersiz kullanıcı kimliği."
-                );
+                throw new Exception("Geçersiz kullanıcı kimliği.");
             }
 
-            // AppUser bul
-            var user = await _context.Users
-                .FindAsync(userId);
+            var user = await _context.Users.FindAsync(userId);
 
             if (user == null)
             {
-                throw new Exception(
-                    "Kullanıcı bulunamadı."
-                );
+                throw new Exception("Kullanıcı bulunamadı.");
             }
 
             if (user.CustomerId == null)
             {
-                throw new Exception(
-                    "Kullanıcıya bağlı müşteri kaydı bulunamadı."
-                );
+                throw new Exception("Kullanıcıya bağlı müşteri kaydı bulunamadı.");
             }
 
-            // Customer bul
             var customer = await _unitOfWork
                 .GetReadRepository<Customer>()
-                .GetSingleAsync(
-                    x =>
-                        x.Id ==
-                        user.CustomerId.Value,
-                    false
-                );
+                .GetSingleAsync(x => x.Id == user.CustomerId.Value, false);
 
             if (customer == null)
             {
-                throw new Exception(
-                    "Müşteri kaydı bulunamadı."
-                );
+                throw new Exception("Müşteri kaydı bulunamadı.");
             }
 
-            // Doğrulama belgesi kontrolü
-            var verificationDocument = await _unitOfWork
-                .GetReadRepository<CustomerVerificationDocument>()
-                .GetSingleAsync(
-                    x =>
-                        x.CustomerId ==
-                        customer.Id,
-                    false
-                );
-
-            if (verificationDocument == null)
-            {
-                return false;
-            }
-
-            if (verificationDocument.Status !=
-                VerificationStatus.Approved)
-            {
-                return false;
-            }
-
-            // Kredi ürünü bul
             var loanProduct = await _unitOfWork
                 .GetReadRepository<LoanProduct>()
-                .GetSingleAsync(
-                    x =>
-                        x.Id == loanProductId &&
-                        x.IsActive,
-                    false
-                );
+                .GetSingleAsync(x => x.Id == loanProductId && x.IsActive, false);
 
             if (loanProduct == null)
             {
-                throw new Exception(
-                    "Aktif kredi ürünü bulunamadı."
-                );
+                throw new Exception("Aktif kredi ürünü bulunamadı.");
             }
 
-            // Müşteri tipi ürünle eşleşiyor mu?
-            return loanProduct.CustomerType ==
-                   customer.CustomerType;
+            return loanProduct.CustomerType == customer.CustomerType;
         }
 
-        // Müşterinin kendi başvurularını getir
-        public async Task<List<LoanApplicationDto>>
-            GetMyApplicationsAsync()
+        public async Task<List<LoanApplicationDto>> GetMyApplicationsAsync()
         {
-            // JWT User Id
             var userIdClaim = _httpContextAccessor
                 .HttpContext?
                 .User
-                .FindFirst(
-                    ClaimTypes.NameIdentifier
-                );
+                .FindFirst(ClaimTypes.NameIdentifier);
 
             if (userIdClaim == null)
             {
-                throw new Exception(
-                    "Kullanıcı kimliği bulunamadı."
-                );
+                throw new Exception("Kullanıcı kimliği bulunamadı.");
             }
 
-            if (!Guid.TryParse(
-                userIdClaim.Value,
-                out Guid userId))
+            if (!Guid.TryParse(userIdClaim.Value, out Guid userId))
             {
-                throw new Exception(
-                    "Geçersiz kullanıcı kimliği."
-                );
+                throw new Exception("Geçersiz kullanıcı kimliği.");
             }
 
-            var user = await _context.Users
-                .FindAsync(userId);
+            var user = await _context.Users.FindAsync(userId);
 
             if (user == null)
             {
-                throw new Exception(
-                    "Kullanıcı bulunamadı."
-                );
+                throw new Exception("Kullanıcı bulunamadı.");
             }
 
             if (user.CustomerId == null)
             {
-                throw new Exception(
-                    "Kullanıcıya bağlı müşteri kaydı bulunamadı."
-                );
+                throw new Exception("Kullanıcıya bağlı müşteri kaydı bulunamadı.");
             }
 
-            var customerId =
-                user.CustomerId.Value;
+            var customerId = user.CustomerId.Value;
 
             var applications = await _unitOfWork
                 .GetReadRepository<LoanApplication>()
                 .GetAll(false)
-                .Where(
-                    x =>
-                        x.CustomerId ==
-                        customerId
-                )
+                .Where(x => x.CustomerId == customerId)
                 .Include(x => x.Customer)
                 .Include(x => x.LoanProduct)
                     .ThenInclude(x => x.Bank)
                 .Include(x => x.LoanCalculation)
-                .OrderByDescending(
-                    x => x.ApplicationDate
-                )
+                .OrderByDescending(x => x.ApplicationDate)
                 .ToListAsync();
 
             return applications
-                .Select(
-                    application =>
-                        MapToDto(application)
-                )
+                .Select(application => MapToDto(application))
                 .ToList();
         }
 
-        private static LoanApplicationDto MapToDto(
-            LoanApplication application)
+        private static LoanApplicationDto MapToDto(LoanApplication application)
         {
             return new LoanApplicationDto
             {
-                Id =
-                    application.Id,
-
-                CustomerId =
-                    application.CustomerId,
-
-                CustomerName =
-                    $"{application.Customer.FirstName} " +
-                    $"{application.Customer.LastName}",
-
-                LoanProductId =
-                    application.LoanProductId,
-
-                LoanProductName =
-                    application.LoanProduct.Name,
-
-                BankName =
-                    application.LoanProduct.Bank.Name,
-
-                LoanCalculationId =
-                    application.LoanCalculationId,
-
-                Amount =
-                    application.LoanCalculation.Amount,
-
-                Term =
-                    application.LoanCalculation.Term,
-
-                MonthlyInstallment =
-                    application.LoanCalculation
-                        .MonthlyInstallment,
-
-                Status =
-                    application.Status,
-
-                ApplicationDate =
-                    application.ApplicationDate,
-
-                DecisionDate =
-                    application.DecisionDate,
-
-                DecisionNote =
-                    application.DecisionNote
+                Id = application.Id,
+                CustomerId = application.CustomerId,
+                CustomerName = $"{application.Customer.FirstName} {application.Customer.LastName}",
+                LoanProductId = application.LoanProductId,
+                LoanProductName = application.LoanProduct.Name,
+                BankName = application.LoanProduct.Bank.Name,
+                LoanCalculationId = application.LoanCalculationId,
+                Amount = application.LoanCalculation.Amount,
+                Term = application.LoanCalculation.Term,
+                MonthlyInstallment = application.LoanCalculation.MonthlyInstallment,
+                Status = application.Status,
+                ApplicationDate = application.ApplicationDate,
+                DecisionDate = application.DecisionDate,
+                DecisionNote = application.DecisionNote
             };
         }
     }

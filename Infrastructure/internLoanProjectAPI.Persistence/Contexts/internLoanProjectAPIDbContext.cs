@@ -19,6 +19,7 @@ namespace internLoanProjectAPI.Persistence.Contexts
         public DbSet<Bank> Banks { get; set; }
 
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<CustomerRegistration> CustomerRegistrations { get; set; }
 
         public DbSet<LoanApplication> LoanApplications { get; set; }
 
@@ -62,15 +63,23 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .HasConversion<int>();
 
             builder.Entity<CustomerVerificationDocument>()
-                .HasOne(x => x.Customer)
+                .HasOne(x => x.CustomerRegistration)
                 .WithOne(x => x.VerificationDocument)
                 .HasForeignKey<CustomerVerificationDocument>(
-                 x => x.CustomerId)
-                 .OnDelete(DeleteBehavior.Cascade);
-           
+                 x => x.CustomerRegistrationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<CustomerRegistration>()
+                .Property(x => x.CustomerType)
+                .HasConversion<int>();
+
+            builder.Entity<CustomerRegistration>()
+                .Property(x => x.Status)
+                .HasConversion<int>();
+
             builder.Entity<CustomerVerificationDocument>()
-            .Property(x => x.Status)
-            .HasConversion<int>();
+                .Property(x => x.Status)
+                .HasConversion<int>();
 
 
             builder.Entity<LoanType>()

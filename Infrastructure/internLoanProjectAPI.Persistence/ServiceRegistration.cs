@@ -32,7 +32,7 @@ namespace internLoanProjectAPI.Persistence
             services.AddScoped<IAdminLoanApplicationService, AdminLoanApplicationService>();
             services.AddScoped<IFileStorageService, FileStorageService>();
             services.AddScoped<IAdminCustomerVerificationService, AdminCustomerVerificationService>();
-            services.AddScoped<ICustomerVerificationService, CustomerVerificationService>();
+          
         }
     }
 }

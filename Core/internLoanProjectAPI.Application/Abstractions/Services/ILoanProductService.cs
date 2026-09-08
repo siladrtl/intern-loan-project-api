@@ -14,13 +14,6 @@ namespace internLoanProjectAPI.Application.Abstractions.Services
         Task<List<LoanProductDto>> GetAllAsync();
         Task<List<LoanProductDto>> GetByLoanTypeAsync(int loanTypeId, CustomerType customerType);
         Task<List<ProductSearchResultDto>> SearchAsync(ProductSearchRequestDto request);
-
-        // Admin
-        Task<bool> AddAsync(CreateLoanProductRequestDto dto);
-
-        Task<bool> UpdateAsync(int id, UpdateLoanProductRequestDto dto);
-
-        Task<bool> DeleteAsync(int id);
     }
 }
 

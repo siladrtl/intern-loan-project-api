@@ -1,4 +1,5 @@
-﻿using internLoanProjectAPI.Application.DTOs.Auth;
+﻿using internLoanProject.Domain.Entities;
+using internLoanProjectAPI.Application.DTOs.Auth;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace internLoanProjectAPI.Application.Abstractions.Services
         Task<CustomerVerificationDto> ApproveAsync(int verificationId, string? note);
 
         Task<CustomerVerificationDto> RejectAsync(int verificationId,string? note);
+
+        Task<CustomerVerificationDocument> GetDocumentAsync(int verificationId);
 
     }
 }

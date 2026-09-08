@@ -11,15 +11,15 @@ namespace internLoanProjectAPI.Application.DTOs.Auth
     {
         public int Id { get; set; }
 
-        public int CustomerId { get; set; }
+        public int CustomerRegistrationId { get; set; }
 
-        public string CustomerName { get; set; }
+        public string CustomerName { get; set; } = null!;
 
         public CustomerType CustomerType { get; set; }
 
-        public string OriginalFileName { get; set; }
+        public string OriginalFileName { get; set; } = null!;
 
-        public string ContentType { get; set; }
+        public string ContentType { get; set; } = null!;
 
         public long FileSize { get; set; }
 
