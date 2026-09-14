@@ -1,6 +1,6 @@
 ﻿using internLoanProjectAPI.Application.Abstractions.Messaging;
 using internLoanProjectAPI.RabbitMQ.Email;
-using internLoanProjectAPI.RabbitMQ.Sms;
+using internLoanProjectAPI.RabbitMQ;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -16,10 +16,6 @@ namespace internLoanProjectAPI.RabbitMQ
         {
             //RabbitMQPublisher
             services.AddScoped<IMessagePublisher, MessagePublisher>();
-           
-            //SMS DI Kaydi
-            services.AddHostedService<SmsNotificationConsumer>();
-            services.AddSingleton<ISmsService, SmsService>();
             
             // Mail DI Kaydi
             services.AddHostedService<EmailNotificationConsumer>();

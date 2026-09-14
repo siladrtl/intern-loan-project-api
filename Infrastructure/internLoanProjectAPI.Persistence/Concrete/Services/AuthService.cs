@@ -22,7 +22,12 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
         private readonly internLoanProjectAPIDbContext _context;
         private readonly IFileStorageService _fileStorageService;
 
-        public AuthService(UserManager<AppUser> userManager, IUnitOfWork unitOfWork, IConfiguration configuration, internLoanProjectAPIDbContext context, IFileStorageService fileStorageService)
+        public AuthService(
+            UserManager<AppUser> userManager,
+            IUnitOfWork unitOfWork,
+            IConfiguration configuration,
+            internLoanProjectAPIDbContext context,
+            IFileStorageService fileStorageService)
         {
             _userManager = userManager;
             _unitOfWork = unitOfWork;
@@ -38,31 +43,54 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             var email = request.Email.Trim();
             var nationalId = request.NationalId.Trim();
 
-            var existingUser = await _userManager.FindByEmailAsync(email);
+            var existingCustomerByNationalId = await _unitOfWork
+                .GetReadRepository<Customer>()
+                .GetSingleAsync(
+                    x => x.NationalId == nationalId,
+                    false);
+
+            if (existingCustomerByNationalId != null)
+            {
+                throw new InvalidOperationException(
+                    "Bu TC Kimlik Numarası zaten kayıtlı.");
+            }
+
+            var existingRegistrationByNationalId = await _unitOfWork
+                .GetReadRepository<CustomerRegistration>()
+                .GetSingleAsync(
+                    x => x.NationalId == nationalId,
+                    false);
+
+            if (existingRegistrationByNationalId != null)
+            {
+                throw new InvalidOperationException(
+                    "Bu TC Kimlik Numarası ile daha önce müşteri olma başvurusu oluşturulmuş.");
+            }
+
+            var existingRegistrationByEmail = await _unitOfWork
+                .GetReadRepository<CustomerRegistration>()
+                .GetSingleAsync(
+                    x => x.Email == email,
+                    false);
+
+            if (existingRegistrationByEmail != null)
+            {
+                throw new InvalidOperationException(
+                    "Bu e-posta adresi ile daha önce müşteri olma başvurusu oluşturulmuş.");
+            }
+
+            var existingUser = await _userManager
+                .FindByEmailAsync(email);
+
             if (existingUser != null)
             {
-                throw new InvalidOperationException("Bu e-posta adresi zaten kayıtlı.");
+                throw new InvalidOperationException(
+                    "Bu e-posta adresi zaten kayıtlı.");
             }
 
-            var existingCustomer = await _unitOfWork
-                .GetReadRepository<Customer>()
-                .GetSingleAsync(x => x.NationalId == nationalId, false);
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
 
-            if (existingCustomer != null)
-            {
-                throw new InvalidOperationException("Bu TC Kimlik Numarası ile daha önce müşteri kaydı oluşturulmuş.");
-            }
-
-            var existingRegistration = await _unitOfWork
-                .GetReadRepository<CustomerRegistration>()
-                .GetSingleAsync(x => x.NationalId == nationalId || x.Email == email, false);
-
-            if (existingRegistration != null)
-            {
-                throw new InvalidOperationException("Bu bilgilerle daha önce müşteri olma başvurusu oluşturulmuş.");
-            }
-
-            await using var transaction = await _context.Database.BeginTransactionAsync();
             string? savedFilePath = null;
 
             try
@@ -88,27 +116,30 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
                 if (!registrationResult)
                 {
-                    throw new InvalidOperationException("Müşteri olma başvurusu oluşturulamadı.");
+                    throw new InvalidOperationException(
+                        "Müşteri olma başvurusu oluşturulamadı.");
                 }
 
                 await _unitOfWork.SaveAsync();
 
-                savedFilePath = await _fileStorageService.SaveAsync(
-                    verificationDocument.FileStream,
-                    verificationDocument.FileName,
-                    verificationDocument.ContentType);
+                savedFilePath =
+                    await _fileStorageService.SaveAsync(
+                        verificationDocument.FileStream,
+                        verificationDocument.FileName,
+                        verificationDocument.ContentType);
 
-                var verificationDocumentEntity = new CustomerVerificationDocument
-                {
-                    CustomerRegistrationId = registration.Id,
-                    OriginalFileName = verificationDocument.FileName,
-                    StoredFileName = Path.GetFileName(savedFilePath),
-                    ContentType = verificationDocument.ContentType,
-                    FileSize = verificationDocument.FileSize,
-                    FilePath = savedFilePath,
-                    Status = VerificationStatus.Pending,
-                    UploadedAt = DateTime.Now
-                };
+                var verificationDocumentEntity =
+                    new CustomerVerificationDocument
+                    {
+                        CustomerRegistrationId = registration.Id,
+                        OriginalFileName = verificationDocument.FileName,
+                        StoredFileName = Path.GetFileName(savedFilePath),
+                        ContentType = verificationDocument.ContentType,
+                        FileSize = verificationDocument.FileSize,
+                        FilePath = savedFilePath,
+                        Status = VerificationStatus.Pending,
+                        UploadedAt = DateTime.Now
+                    };
 
                 var documentResult = await _unitOfWork
                     .GetWriteRepository<CustomerVerificationDocument>()
@@ -116,7 +147,8 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
                 if (!documentResult)
                 {
-                    throw new InvalidOperationException("Müşteri doğrulama belgesi kaydedilemedi.");
+                    throw new InvalidOperationException(
+                        "Müşteri doğrulama belgesi kaydedilemedi.");
                 }
 
                 await _unitOfWork.SaveAsync();
@@ -128,11 +160,18 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     CustomerId = null
                 };
 
-                var identityResult = await _userManager.CreateAsync(user, request.Password);
+                var identityResult =
+                    await _userManager.CreateAsync(
+                        user,
+                        request.Password);
 
                 if (!identityResult.Succeeded)
                 {
-                    var errors = string.Join(", ", identityResult.Errors.Select(x => x.Description));
+                    var errors = string.Join(
+                        ", ",
+                        identityResult.Errors
+                            .Select(x => x.Description));
+
                     throw new InvalidOperationException(errors);
                 }
 
@@ -151,41 +190,48 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
                 if (!string.IsNullOrWhiteSpace(savedFilePath))
                 {
-                    await _fileStorageService.DeleteAsync(savedFilePath);
+                    await _fileStorageService
+                        .DeleteAsync(savedFilePath);
                 }
 
                 throw;
             }
         }
 
-        public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request)
+        public async Task<AuthResponseDto> LoginAsync(
+            LoginRequestDto request)
         {
-            var email = request.Email.Trim();
+            var email =
+                request.Email.Trim();
 
-            var user = await _userManager.FindByEmailAsync(email);
+            var user =
+                await _userManager.FindByEmailAsync(email);
 
             if (user == null)
             {
                 throw new UnauthorizedAccessException(
-                    "Email veya şifre hatalı."
-                );
+                    "Email veya şifre hatalı.");
             }
 
-            var passwordValid = await _userManager
-                .CheckPasswordAsync(user, request.Password);
+            var passwordValid =
+                await _userManager
+                    .CheckPasswordAsync(
+                        user,
+                        request.Password);
 
             if (!passwordValid)
             {
                 throw new UnauthorizedAccessException(
-                    "Email veya şifre hatalı."
-                );
+                    "Email veya şifre hatalı.");
             }
 
-            var roles = await _userManager.GetRolesAsync(user);
+            var roles =
+                await _userManager.GetRolesAsync(user);
 
             if (roles.Contains("Admin"))
             {
-                var adminToken = await GenerateTokenAsync(user);
+                var adminToken =
+                    await GenerateTokenAsync(user);
 
                 return new AuthResponseDto
                 {
@@ -201,38 +247,39 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     .GetReadRepository<CustomerRegistration>()
                     .GetSingleAsync(
                         x => x.Email == email,
-                        false
-                    );
+                        false);
 
                 if (registration != null)
                 {
-                    if (registration.Status == VerificationStatus.Pending)
+                    if (
+                        registration.Status ==
+                        VerificationStatus.Pending)
                     {
                         throw new InvalidOperationException(
-                            "Müşteri olma başvurunuz henüz admin tarafından onaylanmadı."
-                        );
+                            "Müşteri olma başvurunuz henüz admin tarafından onaylanmadı.");
                     }
 
-                    if (registration.Status == VerificationStatus.Rejected)
+                    if (
+                        registration.Status ==
+                        VerificationStatus.Rejected)
                     {
                         throw new InvalidOperationException(
-                            "Müşteri olma başvurunuz reddedildi."
-                        );
+                            "Müşteri olma başvurunuz reddedildi.");
                     }
                 }
 
                 throw new InvalidOperationException(
-                    "Kullanıcıya bağlı müşteri kaydı bulunamadı."
-                );
+                    "Kullanıcıya bağlı müşteri kaydı bulunamadı.");
             }
+
             if (!roles.Contains("Customer"))
             {
                 throw new InvalidOperationException(
-                    "Kullanıcının müşteri yetkisi bulunamadı."
-                );
+                    "Kullanıcının müşteri yetkisi bulunamadı.");
             }
 
-            var token = await GenerateTokenAsync(user);
+            var token =
+                await GenerateTokenAsync(user);
 
             return new AuthResponseDto
             {
@@ -241,50 +288,86 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 CustomerId = user.CustomerId
             };
         }
-        private async Task<string> GenerateTokenAsync(AppUser user)
+
+        private async Task<string> GenerateTokenAsync(
+            AppUser user)
         {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email ?? string.Empty)
-            };
+            var claims =
+                new List<Claim>
+                {
+                    new Claim(
+                        ClaimTypes.NameIdentifier,
+                        user.Id.ToString()),
+
+                    new Claim(
+                        ClaimTypes.Email,
+                        user.Email ?? string.Empty)
+                };
 
             if (user.CustomerId != null)
             {
-                claims.Add(new Claim("CustomerId", user.CustomerId.Value.ToString()));
+                claims.Add(
+                    new Claim(
+                        "CustomerId",
+                        user.CustomerId.Value.ToString()));
 
                 var customer = await _unitOfWork
                     .GetReadRepository<Customer>()
-                    .GetSingleAsync(x => x.Id == user.CustomerId.Value, false);
+                    .GetSingleAsync(
+                        x => x.Id == user.CustomerId.Value,
+                        false);
 
                 if (customer != null)
                 {
-                    claims.Add(new Claim("FirstName", customer.FirstName));
-                    claims.Add(new Claim("LastName", customer.LastName));
+                    claims.Add(
+                        new Claim(
+                            "FirstName",
+                            customer.FirstName));
+
+                    claims.Add(
+                        new Claim(
+                            "LastName",
+                            customer.LastName));
                 }
             }
 
-            var roles = await _userManager.GetRolesAsync(user);
+            var roles =
+                await _userManager.GetRolesAsync(user);
+
             foreach (var role in roles)
             {
-                claims.Add(new Claim(ClaimTypes.Role, role));
+                claims.Add(
+                    new Claim(
+                        ClaimTypes.Role,
+                        role));
             }
 
-            var jwtKey = _configuration["Jwt:Key"];
+            var jwtKey =
+                _configuration["Jwt:Key"];
+
             if (string.IsNullOrWhiteSpace(jwtKey))
             {
-                throw new InvalidOperationException("Jwt:Key appsettings.json içerisinde bulunamadı.");
+                throw new InvalidOperationException(
+                    "Jwt:Key appsettings.json içerisinde bulunamadı.");
             }
 
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var securityKey =
+                new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(jwtKey));
 
-            var token = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(30),
-                signingCredentials: credentials);
+            var credentials =
+                new SigningCredentials(
+                    securityKey,
+                    SecurityAlgorithms.HmacSha256);
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var token =
+                new JwtSecurityToken(
+                    claims: claims,
+                    expires: DateTime.Now.AddMinutes(30),
+                    signingCredentials: credentials);
+
+            return new JwtSecurityTokenHandler()
+                .WriteToken(token);
         }
     }
 }

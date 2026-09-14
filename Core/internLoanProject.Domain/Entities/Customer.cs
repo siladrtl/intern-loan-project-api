@@ -29,6 +29,9 @@ namespace internLoanProject.Domain.Entities
         public CustomerType CustomerType { get; set; }
 
         public ICollection<LoanApplication> LoanApplications { get; set; }
+        public int? CustomerRegistrationId { get; set; }
+
+        public CustomerRegistration? CustomerRegistration { get; set; }
 
     }
 }

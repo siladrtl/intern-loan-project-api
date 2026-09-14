@@ -11,7 +11,6 @@ namespace internLoanProjectAPI.Application.Abstractions.Services
     {
         Task<LoanApplicationDto> CreateAsync(CreateLoanApplicationDto dto);
         Task<List<LoanApplicationDto>> GetMyApplicationsAsync();
-        Task<bool> CheckEligibilityAsync(int loanProductId);
-
+        Task<LoanApplicationEligibilityDto> CheckEligibilityAsync(int loanProductId);
     }
 }
