@@ -72,7 +72,8 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                     City = registration.City,
                     District = registration.District,
                     CustomerType = registration.CustomerType,
-                    CustomerSince = DateTime.Now
+                    CustomerSince = DateTime.Now,
+                    CustomerRegistrationId = registration.Id
                 };
 
                 var customerResult = await _unitOfWork

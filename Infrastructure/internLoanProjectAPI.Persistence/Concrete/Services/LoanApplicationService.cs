@@ -93,6 +93,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 throw new Exception("Kredi hesaplaması seçilen ürünle eşleşmiyor.");
             }
 
+            
             var application = new LoanApplication
             {
                 CustomerId = customerId,
@@ -134,7 +135,7 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
             };
         }
 
-        public async Task<bool> CheckEligibilityAsync(int loanProductId)
+        public async Task<LoanApplicationEligibilityDto> CheckEligibilityAsync(int loanProductId)
         {
             var userIdClaim = _httpContextAccessor
                 .HttpContext?
@@ -163,9 +164,14 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
                 throw new Exception("Kullanıcıya bağlı müşteri kaydı bulunamadı.");
             }
 
+            var customerId = user.CustomerId.Value;
+
             var customer = await _unitOfWork
                 .GetReadRepository<Customer>()
-                .GetSingleAsync(x => x.Id == user.CustomerId.Value, false);
+                .GetSingleAsync(
+                    x => x.Id == customerId,
+                    false
+                );
 
             if (customer == null)
             {
@@ -174,14 +180,75 @@ namespace internLoanProjectAPI.Persistence.Concrete.Services
 
             var loanProduct = await _unitOfWork
                 .GetReadRepository<LoanProduct>()
-                .GetSingleAsync(x => x.Id == loanProductId && x.IsActive, false);
+                .GetSingleAsync(
+                    x => x.Id == loanProductId && x.IsActive,
+                    false
+                );
 
             if (loanProduct == null)
             {
                 throw new Exception("Aktif kredi ürünü bulunamadı.");
             }
 
-            return loanProduct.CustomerType == customer.CustomerType;
+
+            if (loanProduct.CustomerType != customer.CustomerType)
+            {
+                return new LoanApplicationEligibilityDto
+                {
+                    IsEligible = false,
+                    Message = "Bu kredi ürünü müşteri tipinize uygun değildir."
+                };
+            }
+
+            var applications = _unitOfWork
+                .GetReadRepository<LoanApplication>()
+                .GetAll(false)
+                .Where(x => x.CustomerId == customerId);
+
+            var hasPendingApplication = await applications
+                .AnyAsync(x => x.Status == LoanApplicationStatus.Pending);
+
+            if (hasPendingApplication)
+            {
+                return new LoanApplicationEligibilityDto
+                {
+                    IsEligible = false,
+                    Message = "Bekleyen bir kredi başvurunuz bulunduğu için yeni kredi başvurusu yapamazsınız."
+                };
+            }
+
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+
+            var lastRejectedApplication = await applications
+                .Where(x =>
+                    x.Status == LoanApplicationStatus.Rejected &&
+                    x.DecisionDate.HasValue &&
+                    x.DecisionDate.Value >= oneMonthAgo
+                )
+                .OrderByDescending(x => x.DecisionDate)
+                .FirstOrDefaultAsync();
+
+            if (lastRejectedApplication != null)
+            {
+                var nextApplicationDate =
+                    lastRejectedApplication.DecisionDate!.Value.AddMonths(1);
+
+                return new LoanApplicationEligibilityDto
+                {
+                    IsEligible = false,
+                    Message =
+                        $"Son 1 ay içerisinde reddedilen kredi başvurunuz bulunmaktadır. " +
+                        $"{nextApplicationDate:dd.MM.yyyy} tarihinden sonra tekrar başvuru yapabilirsiniz.",
+
+                    NextApplicationDate = nextApplicationDate
+                };
+            }
+
+            return new LoanApplicationEligibilityDto
+            {
+                IsEligible = true,
+                Message = "Kredi başvurusu yapabilirsiniz."
+            };
         }
 
         public async Task<List<LoanApplicationDto>> GetMyApplicationsAsync()

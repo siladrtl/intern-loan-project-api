@@ -62,6 +62,12 @@ namespace internLoanProjectAPI.Persistence.Contexts
                 .Property(x => x.CustomerType)
                 .HasConversion<int>();
 
+            builder.Entity<Customer>()
+                .HasOne(x => x.CustomerRegistration)
+                .WithOne(x => x.Customer)
+                .HasForeignKey<Customer>(x => x.CustomerRegistrationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Entity<CustomerVerificationDocument>()
                 .HasOne(x => x.CustomerRegistration)
                 .WithOne(x => x.VerificationDocument)

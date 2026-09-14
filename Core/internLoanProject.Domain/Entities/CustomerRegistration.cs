@@ -38,5 +38,7 @@ namespace internLoanProject.Domain.Entities
         public string? VerificationNote { get; set; }
 
         public CustomerVerificationDocument? VerificationDocument { get; set; }
+        public Customer? Customer { get; set; }
+
     }
 }
