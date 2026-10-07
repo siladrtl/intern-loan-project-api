@@ -260,8 +260,7 @@ Bu proje staj kapsamında eğitim ve öğrenme amacıyla geliştirilmiştir. Ban
 
 ## Geliştirici
 
-**Sıla Dertli** — Düzce Üniversitesi, Bilgisayar Mühendisliği
-Staj Yeri: Türkiye Vakıflar Bankası T.A.O. — Kredi, Hazine ve Dış İşlemler Uygulama Geliştirme Başkanlığı, Ek Hesap Teknik Ekibi
+**Sıla Dertli** 
 
 ---
 
@@ -520,5 +519,4 @@ This project was developed for educational purposes during an internship. The ba
 
 ## Author
 
-**Sıla Dertli** — Düzce University, Computer Engineering
-Internship: Türkiye Vakıflar Bankası T.A.O. — Credit, Treasury and Foreign Operations Application Development Department, Ek Hesap Technical Team
+**Sıla Dertli** —
