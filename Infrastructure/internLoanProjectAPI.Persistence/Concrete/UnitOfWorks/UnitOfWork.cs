@@ -24,7 +24,6 @@ namespace internLoanProjectAPI.Persistence.Concrete.UnitOfWorks
 
         public IReadRepository<T> GetReadRepository<T>() where T : BaseEntity, new() => new ReadRepository<T>(_context);
       
-        public IWriteRepository<T> GetWriteRepository<T>() where T : BaseEntity, new() => new WriteRepository<T>(_context);
-       
+        public IWriteRepository<T> GetWriteRepository<T>() where T : BaseEntity, new() => new WriteRepository<T>(_context);   
     }
 }
