@@ -1,11 +1,5 @@
-# 🏦 Kredi Hesaplama ve Başvuru Sistemi — API
+# Kredi Hesaplama ve Başvuru Sistemi — API
 ### Loan Calculation and Application System — API
-
-![.NET](https://img.shields.io/badge/.NET-8-512BD4?logo=dotnet)
-![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-Web%20API-512BD4)
-![SQL Server](https://img.shields.io/badge/SQL%20Server-EF%20Core-CC2927?logo=microsoftsqlserver)
-![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?logo=rabbitmq&logoColor=white)
-![SignalR](https://img.shields.io/badge/SignalR-realtime-blue)
 
 [🇹🇷 Türkçe](#-türkçe) | [🇬🇧 English](#-english)
 
