@@ -6,7 +6,6 @@
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-EF%20Core-CC2927?logo=microsoftsqlserver)
 ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?logo=rabbitmq&logoColor=white)
 ![SignalR](https://img.shields.io/badge/SignalR-realtime-blue)
-![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 
 [🇹🇷 Türkçe](#-türkçe) | [🇬🇧 English](#-english)
 
@@ -185,7 +184,6 @@ loan-calcuation-application-api/
 ├── Presentation/
 │   └── internLoanProjectAPI.API/   # Web API, controller'lar, middleware'ler
 │
-├── Dockerfile
 ├── internLoanProjectAPI.sln
 ├── .gitattributes
 ├── .gitignore
@@ -225,8 +223,6 @@ dotnet run --project Presentation/internLoanProjectAPI.API
 ```
 
 Uygulama çalıştığında Swagger arayüzü `https://localhost:<port>/swagger` adresinden kullanılabilir.
-
-Depoda ayrıca kök dizinde bir `Dockerfile` bulunmaktadır.
 
 ### Yapılandırma (`appsettings.json`)
 
@@ -448,7 +444,6 @@ loan-calcuation-application-api/
 ├── Presentation/
 │   └── internLoanProjectAPI.API/   # Web API, controllers, middlewares
 │
-├── Dockerfile
 ├── internLoanProjectAPI.sln
 ├── .gitattributes
 ├── .gitignore
@@ -488,8 +483,6 @@ dotnet run --project Presentation/internLoanProjectAPI.API
 ```
 
 Once running, the Swagger UI is available at `https://localhost:<port>/swagger`.
-
-The repository also contains a `Dockerfile` in the root directory.
 
 ### Configuration (`appsettings.json`)
 
